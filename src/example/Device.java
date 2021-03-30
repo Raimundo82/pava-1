@@ -28,7 +28,6 @@ public class Device {
     public void sum(Integer i, Integer j) {
         System.err.println("Two Integers");
     }
-
     public void sum(int i, int j) {
         System.err.println(i + j);
     }

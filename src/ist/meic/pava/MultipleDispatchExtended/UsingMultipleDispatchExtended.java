@@ -30,17 +30,19 @@ public class UsingMultipleDispatchExtended {
     public static Object invoke(Object receiver, String name, Object... args) {
 
         // First check if it is possible to call a method with primitive types
-        if (checkIfAllArgsArePrimitive(args)) {
-            Class<?>[] argsPrimitiveTypes = IntStream
-                    .iterate(0, n -> n + 1)
-                    .limit(args.length).mapToObj(i -> WRAPPER_TO_PRIMITIVE.get(args[i].getClass()))
-                    .toArray(Class[]::new);
+        Class<?>[] argsPrimitiveTypes = new Class<?>[args.length];
+        for (int i = 0; i < args.length; i++)
+            argsPrimitiveTypes[i] = isWrapped(args[i]) ?
+                    WRAPPER_TO_PRIMITIVE.get(args[i].getClass()) :
+                    args[i].getClass();
 
-            try {
-                Method method = bestMethod(receiver.getClass(), name, argsPrimitiveTypes);
-                return method.invoke(receiver, args);
-            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored){}
+
+        try {
+            Method method = bestMethod(receiver.getClass(), name, argsPrimitiveTypes);
+            return method.invoke(receiver, args);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {
         }
+
 
         Class<?>[] argsTypes = Arrays.stream(args).map(Object::getClass).toArray(Class<?>[]::new);
         try {
@@ -97,9 +99,8 @@ public class UsingMultipleDispatchExtended {
         };
     }
 
-    private static boolean checkIfAllArgsArePrimitive(Object... args) {
-        return Arrays.stream(args)
-                .allMatch(arg -> WRAPPER_TO_PRIMITIVE.containsKey(arg.getClass()));
+    private static boolean isWrapped(Object arg) {
+        return WRAPPER_TO_PRIMITIVE.containsKey(arg.getClass());
     }
 }
 

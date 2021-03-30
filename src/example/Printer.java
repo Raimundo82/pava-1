@@ -1,7 +1,5 @@
 package example;
 
-import java.util.Arrays;
-
 public class Printer extends Device {
 
     public void draw(Line l, Brush b) {

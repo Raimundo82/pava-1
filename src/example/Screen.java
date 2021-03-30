@@ -1,7 +1,5 @@
 package example;
 
-import java.util.Arrays;
-
 public class Screen extends Device {
 
     public void draw(Line l, Brush b) {
