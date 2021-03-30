@@ -1,19 +1,21 @@
 package example;
 
-import static ist.meic.pava.MultipleDispatch.UsingMultipleDispatch.invoke;
+import ist.meic.pava.MultipleDispatch.UsingMultipleDispatch;
+import ist.meic.pava.MultipleDispatchExtended.UsingMultipleDispatchExtended;
 
 public class Example {
     public static void main(String[] args) {
         Device[] devices = new Device[]{new Screen(), new Printer()};
         Shape[] shapes = new Shape[]{new Line(), new Circle()};
         Brush[] brushes = new Brush[]{new Pencil(), new Crayon()};
+        UsingMultipleDispatchExtended.invoke(devices[0], "sum", 1,2);
         for (Device device : devices) {
-            invoke(device, "operation", 5, 4);
-/*            for (Shape shape : shapes) {
+            for (Shape shape : shapes) {
                 for (Brush brush : brushes) {
-                    invoke(device, "draw", shape, brush);
+                    UsingMultipleDispatch.invoke(device, "draw", shape, brush);
+                    UsingMultipleDispatchExtended.invoke(device, "draw", shape, brush);
                 }
-            }*/
+            }
         }
     }
 }

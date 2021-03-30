@@ -24,12 +24,5 @@ public class Screen extends Device {
         System.err.println("drawing a circle on screen with pencil!");
     }
 
-    public void draw(Square s, Crayon c) {
-        System.err.println("drawing a square on screen with crayon!");
-    }
 
-    public void operation(int... numbers) {
-
-        System.err.println(Arrays.stream(numbers).reduce(0, (i, j) -> i - j));
-    }
 }
