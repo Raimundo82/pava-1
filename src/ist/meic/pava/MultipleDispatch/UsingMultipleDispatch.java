@@ -2,6 +2,7 @@ package ist.meic.pava.MultipleDispatch;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -18,28 +19,36 @@ public class UsingMultipleDispatch {
         }
     }
 
-    static Method bestMethod(Class<?> receiverType, String name, Class<?>... argsType) throws NoSuchMethodException {
+    private static Method bestMethod(Class<?> receiverType, String name, Class<?>... argsType) throws NoSuchMethodException {
         try {
             return receiverType.getMethod(name, argsType);
 
         } catch (NoSuchMethodException e) {
-                Class<?>[] mostSpecificMethodSorted = getMostSpecificMethod(receiverType, name, argsType);
-                return bestMethod(receiverType, name, mostSpecificMethodSorted);
+            Method mostSpecificMethod = getMostSpecificMethod(receiverType, name, argsType);
+            return bestMethod(receiverType, name, mostSpecificMethod.getParameterTypes());
         }
     }
 
-
-    private static Class<?>[] getMostSpecificMethod(Class<?> receiverType, String name, Class<?>[] argsType) throws NoSuchMethodException {
-        return Arrays.stream(Arrays.stream(receiverType.getDeclaredMethods())
+    private static Method getMostSpecificMethod(Class<?> receiverType, String name, Class<?>[] argsType) throws NoSuchMethodException {
+        return Arrays.stream(receiverType.getDeclaredMethods())
                 .filter(method -> method.getName().equals(name))
-                .filter(method -> method.getParameterTypes().length == (argsType.length))
-                .sorted(getMethodComparator())
-                .map(Method::getParameterTypes)
-                .toArray(Class<?>[][]::new))
-                .findFirst()
+                .filter(method -> Modifier.toString(method.getModifiers()).equals("public"))
+                .filter(method -> checkIfMethodArgsAreValid(method, argsType))
+                .filter(method -> method.getParameterTypes().length == argsType.length)
+                .min(getMethodComparator())
                 .orElseThrow(NoSuchMethodException::new);
     }
 
+    private static boolean checkIfMethodArgsAreValid(Method method, Class<?>... argsType) {
+        if (!method.isVarArgs()) {
+            for (int i = 0; i < method.getParameterTypes().length; i++) {
+                if (!method.getParameterTypes()[i].isAssignableFrom(argsType[i]))
+                    return false;
+            }
+            return true;
+        }
+        return true;
+    }
 
     private static Comparator<Method> getMethodComparator() {
         return (m1, m2) -> {

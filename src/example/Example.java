@@ -8,11 +8,12 @@ public class Example {
         Shape[] shapes = new Shape[]{new Line(), new Circle()};
         Brush[] brushes = new Brush[]{new Pencil(), new Crayon()};
         for (Device device : devices) {
-            for (Shape shape : shapes) {
+            invoke(device, "operation", 5, 4);
+/*            for (Shape shape : shapes) {
                 for (Brush brush : brushes) {
                     invoke(device, "draw", shape, brush);
                 }
-            }
+            }*/
         }
     }
 }
