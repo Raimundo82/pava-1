@@ -23,21 +23,21 @@ public class UsingMultipleDispatch {
             return receiverType.getMethod(name, argsType);
 
         } catch (NoSuchMethodException e) {
-            if (Arrays.stream(argsType).anyMatch(argType -> argType == Object.class))
-                throw e;
-            Class<?>[][] mostSpecificMethodSorted = getMostSpecificMethod(receiverType, name, argsType);
-            return bestMethod(receiverType, name, mostSpecificMethodSorted[0]);
+                Class<?>[] mostSpecificMethodSorted = getMostSpecificMethod(receiverType, name, argsType);
+                return bestMethod(receiverType, name, mostSpecificMethodSorted);
         }
     }
 
 
-    private static Class<?>[][] getMostSpecificMethod(Class<?> receiverType, String name, Class<?>[] argsType) {
-        return Arrays.stream(receiverType.getDeclaredMethods())
+    private static Class<?>[] getMostSpecificMethod(Class<?> receiverType, String name, Class<?>[] argsType) throws NoSuchMethodException {
+        return Arrays.stream(Arrays.stream(receiverType.getDeclaredMethods())
                 .filter(method -> method.getName().equals(name))
                 .filter(method -> method.getParameterTypes().length == (argsType.length))
                 .sorted(getMethodComparator())
                 .map(Method::getParameterTypes)
-                .toArray(Class<?>[][]::new);
+                .toArray(Class<?>[][]::new))
+                .findFirst()
+                .orElseThrow(NoSuchMethodException::new);
     }
 
 
