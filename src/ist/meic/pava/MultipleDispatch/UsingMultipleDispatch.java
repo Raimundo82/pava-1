@@ -2,7 +2,6 @@ package ist.meic.pava.MultipleDispatch;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.stream.IntStream;
@@ -32,12 +31,11 @@ public class UsingMultipleDispatch {
     }
 
     private static Method getMostSpecificMethod(Class<?> receiverType, String name, Class<?>[] argsType) throws NoSuchMethodException {
-        return Arrays.stream(receiverType.getDeclaredMethods())
+        return Arrays.stream(receiverType.getMethods())
                 .filter(method -> method.getName().equals(name))
                 .filter(method -> method.getParameterTypes().length == argsType.length)
-                .filter(method -> Modifier.toString(method.getModifiers()).equals("public"))
                 .filter(method -> checkIfMethodArgsAreValid(method, argsType))
-                .min(getMethodComparator())
+                .min(compHierarchyArgs.thenComparing(compHierarchyDeclaringClass))
                 .orElseThrow(NoSuchMethodException::new);
     }
 
@@ -48,23 +46,33 @@ public class UsingMultipleDispatch {
                 .allMatch(i -> method.getParameterTypes()[i].isAssignableFrom(argsType[i]));
     }
 
-
-    private static Comparator<Method> getMethodComparator() {
-        return (m1, m2) -> {
+    static Comparator<Method> compHierarchyArgs = (m1, m2) -> {
             for (int i = 0; i < m1.getParameterTypes().length; i++) {
-                Class<?> parameterTypeOne = m1.getParameterTypes()[i];
-                Class<?> parameterTypeTwo = m2.getParameterTypes()[i];
-                boolean b1 = parameterTypeTwo.isAssignableFrom(parameterTypeOne);
-                boolean b2 = parameterTypeOne.isAssignableFrom(parameterTypeTwo);
-                if (parameterTypeOne == parameterTypeTwo)
-                    continue;
-                if (b1 && !b2)
+                Class<?> c1 = m1.getParameterTypes()[i];
+                Class<?> c2 = m2.getParameterTypes()[i];
+                boolean c1IsSubType = c2.isAssignableFrom(c1);
+                boolean c2IsSubtype = c1.isAssignableFrom(c2);
+
+                if (c1IsSubType && !c2IsSubtype)
                     return -1;
-                else if (!b1 && b2)
+                else if (c2IsSubtype && !c1IsSubType)
                     return 1;
             }
             return 0;
         };
+
+    static Comparator<Method> compHierarchyDeclaringClass = (m1, m2) -> {
+            Class<?> c1 = m1.getDeclaringClass();
+            Class<?> c2 = m2.getDeclaringClass();
+            boolean b1 = c1.isAssignableFrom(c2);
+            boolean b2 = c2.isAssignableFrom(c1);
+            if (b1)
+                return 1;
+            if (b2)
+                return -1;
+            return 0;
+        };
     }
-}
+
+
 

@@ -13,9 +13,9 @@ public class Device {
         System.err.println("draw a circle where and with what?");
     }
 
-    public void draw(Square s, Brush b) {
+/*    public void draw(Square s, Brush b) {
         System.err.println("draw a square where and with what?");
-    }
+    }*/
 
     public void print(String... text) {
         System.err.println("Varargs");

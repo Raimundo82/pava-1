@@ -5,10 +5,9 @@ import ist.meic.pava.MultipleDispatchExtended.UsingMultipleDispatchExtended;
 
 public class Example {
     public static void main(String[] args) {
-        Device[] devices = new Device[]{new Screen(), new Printer()};
+        Device[] devices = new Device[]{new Screen(), new Tablet(), new Printer(), new Hologram()};
         Shape[] shapes = new Shape[]{new Line(), new Circle()};
         Brush[] brushes = new Brush[]{new Pencil(), new Crayon()};
-        UsingMultipleDispatchExtended.invoke(devices[0], "sum", 1,2);
         for (Device device : devices) {
             for (Shape shape : shapes) {
                 for (Brush brush : brushes) {
