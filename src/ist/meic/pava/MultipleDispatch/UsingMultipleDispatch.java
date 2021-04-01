@@ -4,7 +4,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Objects;
 import java.util.stream.IntStream;
 
 public class UsingMultipleDispatch {
@@ -25,10 +24,8 @@ public class UsingMultipleDispatch {
     private static Method bestMethod(Class<?> receiverType, String name, Class<?>... argsType) throws NoSuchMethodException {
         try {
             return receiverType.getMethod(name, argsType);
-
         } catch (NoSuchMethodException e) {
-            Method mostSpecificMethod = getMostSpecificMethod(receiverType, name, argsType);
-            return bestMethod(receiverType, name, mostSpecificMethod.getParameterTypes());
+            return getMostSpecificMethod(receiverType, name, argsType);
         }
     }
 
@@ -50,33 +47,33 @@ public class UsingMultipleDispatch {
 
     // compare the in terms of hierarchy of t
     static Comparator<Method> compHierarchyArgs = (m1, m2) -> {
-            for (int i = 0; i < m1.getParameterTypes().length; i++) {
-                Class<?> c1 = m1.getParameterTypes()[i];
-                Class<?> c2 = m2.getParameterTypes()[i];
-                boolean c1IsSubType = c2.isAssignableFrom(c1);
-                boolean c2IsSubtype = c1.isAssignableFrom(c2);
+        for (int i = 0; i < m1.getParameterTypes().length; i++) {
+            Class<?> c1 = m1.getParameterTypes()[i];
+            Class<?> c2 = m2.getParameterTypes()[i];
+            boolean c1IsSubType = c2.isAssignableFrom(c1);
+            boolean c2IsSubtype = c1.isAssignableFrom(c2);
 
-                if (c1IsSubType && !c2IsSubtype)
-                    return -1;
-                if (c2IsSubtype && !c1IsSubType)
-                    return 1;
-            }
-            return 0;
-        };
+            if (c1IsSubType && !c2IsSubtype)
+                return -1;
+            if (c2IsSubtype && !c1IsSubType)
+                return 1;
+        }
+        return 0;
+    };
 
     static Comparator<Method> compHierarchyDeclaringClass = (m1, m2) -> {
-            Class<?> c1 = m1.getDeclaringClass();
-            Class<?> c2 = m2.getDeclaringClass();
-            boolean c1IsSubType = c1.isAssignableFrom(c2);
-            boolean c2IsSubtype = c2.isAssignableFrom(c1);
+        Class<?> c1 = m1.getDeclaringClass();
+        Class<?> c2 = m2.getDeclaringClass();
+        boolean c1IsSubType = c1.isAssignableFrom(c2);
+        boolean c2IsSubtype = c2.isAssignableFrom(c1);
 
-            if (c1IsSubType)
-                return 1;
-            if (c2IsSubtype)
-                return -1;
-            return 0;
-        };
-    }
+        if (c1IsSubType)
+            return 1;
+        if (c2IsSubtype)
+            return -1;
+        return 0;
+    };
+}
 
 
 

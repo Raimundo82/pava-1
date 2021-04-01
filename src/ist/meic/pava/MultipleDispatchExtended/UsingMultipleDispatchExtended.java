@@ -82,8 +82,7 @@ public class UsingMultipleDispatchExtended {
             return receiverType.getMethod(name, argsType);
 
         } catch (NoSuchMethodException e) {
-            Method mostSpecificMethod = getMostSpecificMethod(receiverType, name, argsType);
-            return bestMethod(receiverType, name, mostSpecificMethod.getParameterTypes());
+            return getMostSpecificMethod(receiverType, name, argsType);
         }
     }
 
