@@ -24,6 +24,9 @@ public class Device {
         System.err.println("draw a circle where and with what?");
     }
 
+    public void draw(Shape ...shapes) {
+        System.err.println("draw what shapes where?");
+    }
 
     public void print(String... text) {
         System.err.println("Varargs");

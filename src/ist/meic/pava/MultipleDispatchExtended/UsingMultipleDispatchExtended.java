@@ -42,6 +42,7 @@ public class UsingMultipleDispatchExtended {
             } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {
             }
         }
+
         Class<?>[] argsTypes = Arrays.stream(args).map(Object::getClass).toArray(Class<?>[]::new);
         try {
             return invokeMethod(receiver, name, argsTypes, args);
@@ -54,20 +55,25 @@ public class UsingMultipleDispatchExtended {
         Method method = bestMethod(receiver.getClass(), name, argsTypes);
 
         if (method.isVarArgs()) {
-            int methodParams = method.getParameterTypes().length;
-            Object newVarArgs = Array.newInstance(method.getParameterTypes()[methodParams - 1].getComponentType(), args.length - methodParams + 1);
-            if (methodParams == 1) {
-                IntStream.range(0, args.length).forEach(i -> Array.set(newVarArgs, i, args[i]));
-                return method.invoke(receiver, newVarArgs);
-            } else {
-                IntStream.range(0, args.length - methodParams + 1).forEach(i -> Array.set(newVarArgs, i, args[args.length - methodParams + i]));
-                Object[] newArgs = (Object[]) Array.newInstance(Object.class, methodParams);
-                IntStream.range(0, methodParams - 1).forEach(i -> Array.set(newArgs, i, args[i]));
-                Array.set(newArgs, methodParams - 1, newVarArgs);
-                return method.invoke(receiver, newArgs);
-            }
+            return varargsMethodInvoke(receiver, args, method);
         }
         return method.invoke(receiver, args);
+    }
+
+    private static Object varargsMethodInvoke(Object receiver, Object[] args, Method method) throws IllegalAccessException, InvocationTargetException {
+        int methodParams = method.getParameterTypes().length;
+        Class<?> arrayComponentType = method.getParameterTypes()[methodParams - 1].getComponentType();
+        Object varargsArray = Array.newInstance(arrayComponentType, args.length - methodParams + 1);
+        if (methodParams == 1) {
+            IntStream.range(0, args.length).forEach(i -> Array.set(varargsArray, i, args[i]));
+            return method.invoke(receiver, varargsArray);
+        } else {
+            IntStream.range(0, args.length - methodParams + 1).forEach(i -> Array.set(varargsArray, i, args[args.length - methodParams + i]));
+            Object[] newArgs = (Object[]) Array.newInstance(Object.class, methodParams);
+            IntStream.range(0, methodParams - 1).forEach(i -> Array.set(newArgs, i, args[i]));
+            Array.set(newArgs, methodParams - 1, varargsArray);
+            return method.invoke(receiver, newArgs);
+        }
     }
 
     private static Method bestMethod(Class<?> receiverType, String name, Class<?>... argsType) throws
@@ -98,42 +104,42 @@ public class UsingMultipleDispatchExtended {
                 argsAreCompatibleWithMethodParams(method, numberOfArgs, argsType);
     }
 
-    private static boolean argsAreCompatibleWithMethodParams(Method method, int numberOfArgs, Class<?>[] argsType) {
-        return IntStream
-                .range(0, numberOfArgs)
-                .allMatch(i -> method.getParameterTypes()[i].isAssignableFrom(argsType[i]));
-    }
-
     private static boolean checkIfVarArgsMethodParamsAreValid(Method method, Class<?>... argsType) {
         int methodParams = method.getParameterTypes().length;
         if (methodParams == 1) {
             return checkVarArgsTypes(method, argsType.length, argsType);
 
         } else {
-            int numberOfArgs = methodParams - 1;
-            int numberOfVarArgs = argsType.length - numberOfArgs;
-            return argsAreCompatibleWithMethodParams(method, numberOfArgs, argsType)
-                    && checkVarArgsTypes(method, numberOfVarArgs, argsType);
-
+            int numberOfNonVarargs = methodParams - 1;
+            int numberOfVarargs = argsType.length - numberOfNonVarargs;
+            return argsAreCompatibleWithMethodParams(method, numberOfNonVarargs, argsType)
+                    && checkVarArgsTypes(method, numberOfVarargs, argsType);
         }
     }
 
-    private static boolean checkVarArgsTypes(Method method, int numberOfVarArgs, Class<?>... argsType) {
-        if (varArgsTypesAreAllEqual(argsType, numberOfVarArgs)) {
+    private static boolean argsAreCompatibleWithMethodParams(Method method, int numberOfArgs, Class<?>[] argsType) {
+        return IntStream
+                .range(0, numberOfArgs)
+                .allMatch(i -> method.getParameterTypes()[i].isAssignableFrom(argsType[i]));
+    }
+
+
+    private static boolean checkVarArgsTypes(Method method, int numberOfVarargs, Class<?>... argsType) {
+        if (varargsTypesAreAllEqual(argsType, numberOfVarargs)) {
             if (IntStream
-                    .range(argsType.length - numberOfVarArgs, argsType.length)
+                    .range(argsType.length - numberOfVarargs, argsType.length)
                     .allMatch(i -> argsType[i].isAssignableFrom(Number.class) ||
                             argsType[i].isAssignableFrom(Character.class) ||
                             argsType[i].isAssignableFrom(Boolean.class))) {
-                return checkIfAreArgsFromSuperReferenceTypes(method, numberOfVarArgs, argsType);
+                return checkIfArgsAreAssignableFromSuperType(method, numberOfVarargs, argsType);
             }
-            return allArgsAreEqualToVarArgsElementsType(method, numberOfVarArgs, argsType);
+            return allArgsAreEqualToVarargsComponentType(method, numberOfVarargs, argsType);
         } else {
-            return checkIfAreArgsFromSuperReferenceTypes(method, numberOfVarArgs, argsType);
+            return checkIfArgsAreAssignableFromSuperType(method, numberOfVarargs, argsType);
         }
     }
 
-    private static boolean checkIfAreArgsFromSuperReferenceTypes(Method method, int numberOfVarArgs, Class<?>...
+    private static boolean checkIfArgsAreAssignableFromSuperType(Method method, int numberOfVarArgs, Class<?>...
             argsType) {
         if (IntStream
                 .range(argsType.length - numberOfVarArgs, argsType.length)
@@ -149,7 +155,8 @@ public class UsingMultipleDispatchExtended {
                 .range(argsType.length - numberOfVarArgs, argsType.length)
                 .allMatch(i -> argsType[i].isAssignableFrom(Boolean.class)))
             return allArgsAreAssignableFromBooleanOrObject(method);
-        return Stream.of(method.getParameterTypes()[0]).anyMatch(c -> c.equals(Object[].class));
+        Class<?> varargsComponentType = method.getParameterTypes()[method.getParameterTypes().length - 1].getComponentType();
+        return Arrays.stream(argsType).allMatch(varargsComponentType::isAssignableFrom);
     }
 
     private static boolean allArgsAreAssignableFromBooleanOrObject(Method method) {
@@ -167,17 +174,18 @@ public class UsingMultipleDispatchExtended {
                 .anyMatch(c -> c.equals(Object[].class) || c.equals(Number[].class));
     }
 
-    private static boolean allArgsAreEqualToVarArgsElementsType(Method method, int numberOfVarArgs, Class<?>[]
+    private static boolean allArgsAreEqualToVarargsComponentType(Method method, int numberOfVarargs, Class<?>[]
             argsType) {
+        Class<?> varargsComponentType = method.getParameterTypes()[method.getParameterTypes().length - 1].getComponentType();
         return IntStream
-                .range(argsType.length - numberOfVarArgs, argsType.length)
-                .allMatch(i -> method.getParameterTypes()[method.getParameterTypes().length - 1].getComponentType().equals(argsType[i]));
+                .range(argsType.length - numberOfVarargs, argsType.length)
+                .allMatch(i -> varargsComponentType.isAssignableFrom(argsType[i]));
     }
 
-    private static boolean varArgsTypesAreAllEqual(Class<?>[] argsType, int numberOfVarArgs) {
+    private static boolean varargsTypesAreAllEqual(Class<?>[] argsType, int numberOfVarargs) {
         return IntStream
-                .range(argsType.length - numberOfVarArgs, argsType.length)
-                .allMatch(i -> argsType[i].equals(argsType[numberOfVarArgs - 1]));
+                .range(argsType.length - numberOfVarargs, argsType.length)
+                .allMatch(i -> argsType[i].equals(argsType[numberOfVarargs - 1]));
     }
 
 

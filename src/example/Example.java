@@ -8,12 +8,16 @@ public class Example {
         Device[] devices = new Device[]{new Screen(), new Tablet(), new Printer(), new Hologram()};
         Shape[] shapes = new Shape[]{new Line(), new Circle(), new Square()};
         Brush[] brushes = new Brush[]{new Pencil(), new Crayon()};
+        Screen s = new Screen();
         Device d = new Device();
-        UsingMultipleDispatchExtended.invoke(d, "print", "b", "c");
-        UsingMultipleDispatchExtended.invoke(d, "print", "b", "c", "a", "v");
-        UsingMultipleDispatchExtended.invoke(d, "sum",2,4);
-        UsingMultipleDispatchExtended.invoke(d, "sum",2,4,5);
-        UsingMultipleDispatchExtended.invoke(d, "mix", true, "a","b");
+        UsingMultipleDispatchExtended.invoke(d,"draw",new Shape(),new Shape(),new Shape());
+        UsingMultipleDispatchExtended.invoke(s,"draw",new Circle(),new Circle(),new Circle());
+        UsingMultipleDispatchExtended.invoke(s,"draw",new Line(),new Circle(),new Square());
+        UsingMultipleDispatchExtended.invoke(s, "print", "b", "c");
+        UsingMultipleDispatchExtended.invoke(s, "print", "b", "c", "a", "v");
+        UsingMultipleDispatchExtended.invoke(s, "sum",2,4);
+        UsingMultipleDispatchExtended.invoke(s, "sum",2,4,5);
+        UsingMultipleDispatchExtended.invoke(s, "mix", true, "a","b");
         for (Device device : devices) {
             for (Shape shape : shapes) {
                 for (Brush brush : brushes) {
