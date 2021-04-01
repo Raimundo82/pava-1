@@ -9,7 +9,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public class UsingMultipleDispatchExtended {
 
@@ -105,12 +104,12 @@ public class UsingMultipleDispatchExtended {
     private static boolean checkIfVarArgsMethodParamsAreValid(Method method, Class<?>... argsType) {
         int methodParams = method.getParameterTypes().length;
         if (methodParams == 1) {
-            return argsAreCompatibleWithVarargsComponentType(method, argsType.length, argsType);
+            return argsAreCompatibleWithMethodVarargsComponentType(method, argsType.length, argsType);
         } else {
             int numberOfNonVarargs = methodParams - 1;
             int numberOfVarargs = argsType.length - numberOfNonVarargs;
             return argsAreCompatibleWithMethodParams(method, numberOfNonVarargs, argsType)
-                    && argsAreCompatibleWithVarargsComponentType(method, numberOfVarargs, argsType);
+                    && argsAreCompatibleWithMethodVarargsComponentType(method, numberOfVarargs, argsType);
         }
     }
 
@@ -121,7 +120,7 @@ public class UsingMultipleDispatchExtended {
     }
 
 
-    private static boolean argsAreCompatibleWithVarargsComponentType(Method method, int numberOfVarargs, Class<?>[]
+    private static boolean argsAreCompatibleWithMethodVarargsComponentType(Method method, int numberOfVarargs, Class<?>[]
             argsType) {
         Class<?> varargsComponentType = method.getParameterTypes()[method.getParameterTypes().length - 1].getComponentType();
         return IntStream
@@ -132,8 +131,15 @@ public class UsingMultipleDispatchExtended {
 
     static Comparator<Method> compHierarchyArgs = (m1, m2) -> {
         for (int i = 0; i < m1.getParameterTypes().length; i++) {
-            Class<?> c1 = m1.getParameterTypes()[i];
-            Class<?> c2 = m2.getParameterTypes()[i];
+
+            Class<?> c1 = m1.isVarArgs() && isMethodLastParameter(i,m1) ?
+                    m1.getParameterTypes()[i].getComponentType() :
+                    m1.getParameterTypes()[i];
+
+            Class<?> c2 = m2.isVarArgs() && isMethodLastParameter(i,m2) ?
+                    m2.getParameterTypes()[i].getComponentType() :
+                    m2.getParameterTypes()[i];
+
             boolean c1IsSubType = c2.isAssignableFrom(c1);
             boolean c2IsSubtype = c1.isAssignableFrom(c2);
 
@@ -144,6 +150,10 @@ public class UsingMultipleDispatchExtended {
         }
         return 0;
     };
+
+    static boolean isMethodLastParameter(int i, Method method) {
+        return method.getParameterTypes()[i] == method.getParameterTypes()[method.getParameterTypes().length - 1];
+    }
 
     static Comparator<Method> compHierarchyDeclaringClass = (m1, m2) -> {
         Class<?> c1 = m1.getDeclaringClass();
