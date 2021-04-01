@@ -10,9 +10,9 @@ public class Example {
         Brush[] brushes = new Brush[]{new Pencil(), new Crayon()};
         Screen s = new Screen();
         Device d = new Device();
-        UsingMultipleDispatchExtended.invoke(d,"draw",new Shape(),new Shape(),new Shape());
-        UsingMultipleDispatchExtended.invoke(s,"draw",new Circle(),new Circle(),new Circle());
-        UsingMultipleDispatchExtended.invoke(s,"draw",new Line(),new Circle(),new Square());
+      //  UsingMultipleDispatchExtended.invoke(d,"draw",new Shape(),new Shape(),new Shape());
+        UsingMultipleDispatchExtended.invoke(s,"draw",new Shape(),new Circle(),new Circle());
+/*        UsingMultipleDispatchExtended.invoke(s,"draw",new Line(),new Circle(),new Square());
         UsingMultipleDispatchExtended.invoke(s, "print", "b", "c");
         UsingMultipleDispatchExtended.invoke(s, "print", "b", "c", "a", "v");
         UsingMultipleDispatchExtended.invoke(s, "sum",2,4);
@@ -25,6 +25,6 @@ public class Example {
                     UsingMultipleDispatchExtended.invoke(device, "draw", shape, brush);
                 }
             }
-        }
+        }*/
     }
 }

@@ -90,7 +90,7 @@ public class UsingMultipleDispatchExtended {
                 .filter(method -> method.getName().equals(name))
                 .filter(method -> method.getParameterTypes().length == argsType.length || method.isVarArgs())
                 .filter(method -> checkIfMethodArgsAreValid(method, argsType))
-                .min(compHierarchyArgs.thenComparing(compHierarchyDeclaringClass))
+                .min(argsTypeHierarchyComparator.thenComparing(receiverTypeHierarchyComparator))
                 .orElseThrow(NoSuchMethodException::new);
     }
 
@@ -129,14 +129,16 @@ public class UsingMultipleDispatchExtended {
     }
 
 
-    static Comparator<Method> compHierarchyArgs = (m1, m2) -> {
+    static Comparator<Method> argsTypeHierarchyComparator = (m1, m2) -> {
+        if (m1.isVarArgs() && !m2.isVarArgs()) return -1;
+        if (!m1.isVarArgs() && m2.isVarArgs()) return 1;
         for (int i = 0; i < m1.getParameterTypes().length; i++) {
 
-            Class<?> c1 = m1.isVarArgs() && isMethodLastParameter(i,m1) ?
+            Class<?> c1 = m1.isVarArgs() && isMethodLastParameter(i, m1) ?
                     m1.getParameterTypes()[i].getComponentType() :
                     m1.getParameterTypes()[i];
 
-            Class<?> c2 = m2.isVarArgs() && isMethodLastParameter(i,m2) ?
+            Class<?> c2 = m2.isVarArgs() && isMethodLastParameter(i, m2) ?
                     m2.getParameterTypes()[i].getComponentType() :
                     m2.getParameterTypes()[i];
 
@@ -155,7 +157,7 @@ public class UsingMultipleDispatchExtended {
         return method.getParameterTypes()[i] == method.getParameterTypes()[method.getParameterTypes().length - 1];
     }
 
-    static Comparator<Method> compHierarchyDeclaringClass = (m1, m2) -> {
+    static Comparator<Method> receiverTypeHierarchyComparator = (m1, m2) -> {
         Class<?> c1 = m1.getDeclaringClass();
         Class<?> c2 = m2.getDeclaringClass();
         boolean b1 = c1.isAssignableFrom(c2);
