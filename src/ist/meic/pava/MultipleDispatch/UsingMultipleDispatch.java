@@ -33,12 +33,12 @@ public class UsingMultipleDispatch {
         return Arrays.stream(receiverType.getMethods())
                 .filter(method -> method.getName().equals(name))
                 .filter(method -> method.getParameterTypes().length == argsType.length)
-                .filter(method -> checkIfMethodArgsAreValid(method, argsType))
-                .min(compHierarchyArgs.thenComparing(compHierarchyDeclaringClass))
+                .filter(method -> checkIfMethodsParamsAreCompatible(method, argsType))
+                .min(receiverTypeHierarchyComparator.thenComparing(argsTypeHierarchyComparator))
                 .orElseThrow(NoSuchMethodException::new);
     }
 
-    private static boolean checkIfMethodArgsAreValid(Method method, Class<?>... argsType) {
+    private static boolean checkIfMethodsParamsAreCompatible(Method method, Class<?>... argsType) {
         int numberOfArgs = method.getParameterTypes().length;
         return IntStream
                 .range(0, numberOfArgs)
@@ -46,7 +46,7 @@ public class UsingMultipleDispatch {
     }
 
     // compare the in terms of hierarchy of t
-    static Comparator<Method> compHierarchyArgs = (m1, m2) -> {
+    static Comparator<Method> argsTypeHierarchyComparator = (m1, m2) -> {
         for (int i = 0; i < m1.getParameterTypes().length; i++) {
             Class<?> c1 = m1.getParameterTypes()[i];
             Class<?> c2 = m2.getParameterTypes()[i];
@@ -61,15 +61,14 @@ public class UsingMultipleDispatch {
         return 0;
     };
 
-    static Comparator<Method> compHierarchyDeclaringClass = (m1, m2) -> {
+    static Comparator<Method> receiverTypeHierarchyComparator = (m1, m2) -> {
         Class<?> c1 = m1.getDeclaringClass();
         Class<?> c2 = m2.getDeclaringClass();
         boolean c1IsSubType = c1.isAssignableFrom(c2);
         boolean c2IsSubtype = c2.isAssignableFrom(c1);
-
-        if (c1IsSubType)
+        if (c1IsSubType && !c2IsSubtype)
             return 1;
-        if (c2IsSubtype)
+        if (c2IsSubtype && !c1IsSubType)
             return -1;
         return 0;
     };

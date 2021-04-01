@@ -89,12 +89,12 @@ public class UsingMultipleDispatchExtended {
         return Arrays.stream(receiverType.getMethods())
                 .filter(method -> method.getName().equals(name))
                 .filter(method -> method.getParameterTypes().length == argsType.length || method.isVarArgs())
-                .filter(method -> checkIfMethodArgsAreValid(method, argsType))
-                .min(argsTypeHierarchyComparator.thenComparing(receiverTypeHierarchyComparator))
+                .filter(method -> checkIfMethodsParamsAreCompatible(method, argsType))
+                .min(receiverTypeHierarchyComparator.thenComparing(argsTypeHierarchyComparator))
                 .orElseThrow(NoSuchMethodException::new);
     }
 
-    static boolean checkIfMethodArgsAreValid(Method method, Class<?>... argsType) {
+    static boolean checkIfMethodsParamsAreCompatible(Method method, Class<?>... argsType) {
         int numberOfArgs = method.getParameterTypes().length;
         return method.isVarArgs() ?
                 checkIfVarArgsMethodParamsAreValid(method, argsType) :
@@ -130,17 +130,12 @@ public class UsingMultipleDispatchExtended {
 
 
     static Comparator<Method> argsTypeHierarchyComparator = (m1, m2) -> {
-        if (m1.isVarArgs() && !m2.isVarArgs()) return -1;
-        if (!m1.isVarArgs() && m2.isVarArgs()) return 1;
-        for (int i = 0; i < m1.getParameterTypes().length; i++) {
+        int m1Params = m1.getParameterTypes().length;
+        int m2Params = m2.getParameterTypes().length;
+        for (int i = 0; i < Integer.max(m1Params, m2Params); i++) {
 
-            Class<?> c1 = m1.isVarArgs() && isMethodLastParameter(i, m1) ?
-                    m1.getParameterTypes()[i].getComponentType() :
-                    m1.getParameterTypes()[i];
-
-            Class<?> c2 = m2.isVarArgs() && isMethodLastParameter(i, m2) ?
-                    m2.getParameterTypes()[i].getComponentType() :
-                    m2.getParameterTypes()[i];
+            Class<?> c1 = getParameterType(m1, m1Params, i);
+            Class<?> c2 = getParameterType(m2, m2Params, i);
 
             boolean c1IsSubType = c2.isAssignableFrom(c1);
             boolean c2IsSubtype = c1.isAssignableFrom(c2);
@@ -150,21 +145,37 @@ public class UsingMultipleDispatchExtended {
             else if (c2IsSubtype && !c1IsSubType)
                 return 1;
         }
+        if(m1.isVarArgs() && !m2.isVarArgs())
+            return 1;
+        if(!m1.isVarArgs() && m2.isVarArgs())
+            return -1;
         return 0;
     };
 
+    private static Class<?> getParameterType(Method method, int m1Params, int i) {
+        Class<?> c1;
+        if (method.isVarArgs()) {
+            c1 = isMethodLastParameter(i, method) ?
+                    method.getParameterTypes()[m1Params - 1].getComponentType() :
+                    method.getParameterTypes()[i];
+        } else {
+            c1 = method.getParameterTypes()[i];
+        }
+        return c1;
+    }
+
     static boolean isMethodLastParameter(int i, Method method) {
-        return method.getParameterTypes()[i] == method.getParameterTypes()[method.getParameterTypes().length - 1];
+        return i >= method.getParameterTypes().length - 1;
     }
 
     static Comparator<Method> receiverTypeHierarchyComparator = (m1, m2) -> {
         Class<?> c1 = m1.getDeclaringClass();
         Class<?> c2 = m2.getDeclaringClass();
-        boolean b1 = c1.isAssignableFrom(c2);
-        boolean b2 = c2.isAssignableFrom(c1);
-        if (b1)
+        boolean c1IsSubType = c1.isAssignableFrom(c2);
+        boolean c2IsSubtype = c2.isAssignableFrom(c1);
+        if (c1IsSubType && !c2IsSubtype)
             return 1;
-        if (b2)
+        if (c2IsSubtype && !c1IsSubType)
             return -1;
         return 0;
     };
