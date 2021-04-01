@@ -6,16 +6,13 @@ import ist.meic.pava.MultipleDispatchExtended.UsingMultipleDispatchExtended;
 
 public class Example {
     public static void main(String[] args) {
-        Device[] devices = new Device[]{new Screen(), new Printer()};
-        Shape[] shapes = new Shape[]{new Line(), new Circle()};
+        Device[] devices = new Device[]{new Device()};
+        Shape shape = new Shape();
 
         for (Device device : devices) {
-            for (Shape shape : shapes) {
 
-                    UsingMultipleDispatch.invoke(device, "draw", shape);
                     UsingMultipleDispatchExtended.invoke(device, "draw", shape);
 
             }
         }
     }
-}

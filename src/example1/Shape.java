@@ -1,5 +1,4 @@
 package example1;
 
-interface Shape {  
-
+class Shape implements Line, Circle {
 }

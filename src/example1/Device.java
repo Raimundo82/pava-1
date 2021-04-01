@@ -1,9 +1,6 @@
 package example1;
 
 class Device {
-    public void draw(Shape s) {
-        System.err.println("draw what where?");
-    }
 
     public void draw(Line l) {
         System.err.println("draw a line where?");
