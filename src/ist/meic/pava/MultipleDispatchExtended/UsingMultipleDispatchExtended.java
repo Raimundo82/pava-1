@@ -80,7 +80,6 @@ public class UsingMultipleDispatchExtended {
             NoSuchMethodException {
         try {
             return receiverType.getMethod(name, argsType);
-
         } catch (NoSuchMethodException e) {
             return getMostSpecificMethod(receiverType, name, argsType);
         }
@@ -106,13 +105,12 @@ public class UsingMultipleDispatchExtended {
     private static boolean checkIfVarArgsMethodParamsAreValid(Method method, Class<?>... argsType) {
         int methodParams = method.getParameterTypes().length;
         if (methodParams == 1) {
-            return checkVarArgsTypes(method, argsType.length, argsType);
-
+            return argsAreCompatibleWithVarargsComponentType(method, argsType.length, argsType);
         } else {
             int numberOfNonVarargs = methodParams - 1;
             int numberOfVarargs = argsType.length - numberOfNonVarargs;
             return argsAreCompatibleWithMethodParams(method, numberOfNonVarargs, argsType)
-                    && checkVarArgsTypes(method, numberOfVarargs, argsType);
+                    && argsAreCompatibleWithVarargsComponentType(method, numberOfVarargs, argsType);
         }
     }
 
@@ -123,68 +121,12 @@ public class UsingMultipleDispatchExtended {
     }
 
 
-    private static boolean checkVarArgsTypes(Method method, int numberOfVarargs, Class<?>... argsType) {
-        if (varargsTypesAreAllEqual(argsType, numberOfVarargs)) {
-            if (IntStream
-                    .range(argsType.length - numberOfVarargs, argsType.length)
-                    .allMatch(i -> argsType[i].isAssignableFrom(Number.class) ||
-                            argsType[i].isAssignableFrom(Character.class) ||
-                            argsType[i].isAssignableFrom(Boolean.class))) {
-                return checkIfArgsAreAssignableFromSuperType(method, numberOfVarargs, argsType);
-            }
-            return allArgsAreEqualToVarargsComponentType(method, numberOfVarargs, argsType);
-        } else {
-            return checkIfArgsAreAssignableFromSuperType(method, numberOfVarargs, argsType);
-        }
-    }
-
-    private static boolean checkIfArgsAreAssignableFromSuperType(Method method, int numberOfVarArgs, Class<?>...
-            argsType) {
-        if (IntStream
-                .range(argsType.length - numberOfVarArgs, argsType.length)
-                .allMatch(i -> argsType[i].isAssignableFrom(Number.class)))
-            return allArgsAreAssignableFromNumberOrObject(method);
-
-        if (IntStream
-                .range(argsType.length - numberOfVarArgs, argsType.length)
-                .allMatch(i -> argsType[i].isAssignableFrom(Character.class)))
-            return allArgsAreAssignableFromCharacterOrObject(method);
-
-        if (IntStream
-                .range(argsType.length - numberOfVarArgs, argsType.length)
-                .allMatch(i -> argsType[i].isAssignableFrom(Boolean.class)))
-            return allArgsAreAssignableFromBooleanOrObject(method);
-        Class<?> varargsComponentType = method.getParameterTypes()[method.getParameterTypes().length - 1].getComponentType();
-        return Arrays.stream(argsType).allMatch(varargsComponentType::isAssignableFrom);
-    }
-
-    private static boolean allArgsAreAssignableFromBooleanOrObject(Method method) {
-        return Stream.of(method.getParameterTypes()[0])
-                .anyMatch(c -> c.equals(Object[].class) || c.equals(Boolean[].class));
-    }
-
-    private static boolean allArgsAreAssignableFromCharacterOrObject(Method method) {
-        return Stream.of(method.getParameterTypes()[0])
-                .anyMatch(c -> c.equals(Object[].class) || c.equals(Character[].class));
-    }
-
-    private static boolean allArgsAreAssignableFromNumberOrObject(Method method) {
-        return Stream.of(method.getParameterTypes()[0])
-                .anyMatch(c -> c.equals(Object[].class) || c.equals(Number[].class));
-    }
-
-    private static boolean allArgsAreEqualToVarargsComponentType(Method method, int numberOfVarargs, Class<?>[]
+    private static boolean argsAreCompatibleWithVarargsComponentType(Method method, int numberOfVarargs, Class<?>[]
             argsType) {
         Class<?> varargsComponentType = method.getParameterTypes()[method.getParameterTypes().length - 1].getComponentType();
         return IntStream
                 .range(argsType.length - numberOfVarargs, argsType.length)
                 .allMatch(i -> varargsComponentType.isAssignableFrom(argsType[i]));
-    }
-
-    private static boolean varargsTypesAreAllEqual(Class<?>[] argsType, int numberOfVarargs) {
-        return IntStream
-                .range(argsType.length - numberOfVarargs, argsType.length)
-                .allMatch(i -> argsType[i].equals(argsType[numberOfVarargs - 1]));
     }
 
 
