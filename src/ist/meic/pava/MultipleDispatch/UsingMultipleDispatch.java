@@ -4,6 +4,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Objects;
 import java.util.stream.IntStream;
 
 public class UsingMultipleDispatch {
@@ -12,6 +13,7 @@ public class UsingMultipleDispatch {
     public static Object invoke(Object receiver, String name, Object... args) {
 
         Class<?>[] argsType = Arrays.stream(args).map(Object::getClass).toArray(Class[]::new);
+
         try {
             Method method = bestMethod(receiver.getClass(), name, argsType);
             return method.invoke(receiver, args);
@@ -41,11 +43,12 @@ public class UsingMultipleDispatch {
 
     private static boolean checkIfMethodArgsAreValid(Method method, Class<?>... argsType) {
         int numberOfArgs = method.getParameterTypes().length;
-        return method.isVarArgs() || IntStream
+        return IntStream
                 .range(0, numberOfArgs)
                 .allMatch(i -> method.getParameterTypes()[i].isAssignableFrom(argsType[i]));
     }
 
+    // compare the in terms of hierarchy of t
     static Comparator<Method> compHierarchyArgs = (m1, m2) -> {
             for (int i = 0; i < m1.getParameterTypes().length; i++) {
                 Class<?> c1 = m1.getParameterTypes()[i];
@@ -55,7 +58,7 @@ public class UsingMultipleDispatch {
 
                 if (c1IsSubType && !c2IsSubtype)
                     return -1;
-                else if (c2IsSubtype && !c1IsSubType)
+                if (c2IsSubtype && !c1IsSubType)
                     return 1;
             }
             return 0;
@@ -64,11 +67,12 @@ public class UsingMultipleDispatch {
     static Comparator<Method> compHierarchyDeclaringClass = (m1, m2) -> {
             Class<?> c1 = m1.getDeclaringClass();
             Class<?> c2 = m2.getDeclaringClass();
-            boolean b1 = c1.isAssignableFrom(c2);
-            boolean b2 = c2.isAssignableFrom(c1);
-            if (b1)
+            boolean c1IsSubType = c1.isAssignableFrom(c2);
+            boolean c2IsSubtype = c2.isAssignableFrom(c1);
+
+            if (c1IsSubType)
                 return 1;
-            if (b2)
+            if (c2IsSubtype)
                 return -1;
             return 0;
         };
