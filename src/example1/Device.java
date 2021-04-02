@@ -1,12 +1,16 @@
 package example1;
 
-class Device {
+public class Device {
+
 
     public void draw(Line l) {
-        System.err.println("draw a line where?");
+        System.err.println("draw a line on What?");
+    }
+    public void draw(Circle c) {
+        System.err.println("draw a circle on what?");
     }
 
-    public void draw(Circle c) {
-        System.err.println("draw a circle where?");
-    }
+
+
+
 }

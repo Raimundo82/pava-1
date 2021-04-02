@@ -11,17 +11,23 @@ public class UsingMultipleDispatch {
 
     public static Object invoke(Object receiver, String name, Object... args) {
 
-        Class<?>[] argsType = Arrays.stream(args).map(Object::getClass).toArray(Class[]::new);
+        Class<?>[] argsTypes = Arrays
+                .stream(args)
+                .map(o -> o == null ? Object.class : o.getClass())
+                .toArray(Class[]::new);
 
         try {
-            Method method = bestMethod(receiver.getClass(), name, argsType);
+            Method method = bestMethod(receiver.getClass(), name, argsTypes);
             return method.invoke(receiver, args);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private static Method bestMethod(Class<?> receiverType, String name, Class<?>... argsType) throws NoSuchMethodException {
+    // Get a method from receiver type or its superclasses types, whom parameters types match exactly the args types
+    private static Method bestMethod(Class<?> receiverType,
+                                     String name,
+                                     Class<?>... argsType) throws NoSuchMethodException {
         try {
             return receiverType.getMethod(name, argsType);
         } catch (NoSuchMethodException e) {
@@ -29,7 +35,10 @@ public class UsingMultipleDispatch {
         }
     }
 
-    private static Method getMostSpecificMethod(Class<?> receiverType, String name, Class<?>[] argsType) throws NoSuchMethodException {
+    // Filter and sort the methods according the specification project to return the most specific one
+    private static Method getMostSpecificMethod(Class<?> receiverType,
+                                                String name,
+                                                Class<?>[] argsType) throws NoSuchMethodException {
         return Arrays.stream(receiverType.getMethods())
                 .filter(method -> method.getName().equals(name))
                 .filter(method -> method.getParameterTypes().length == argsType.length)
@@ -38,6 +47,7 @@ public class UsingMultipleDispatch {
                 .orElseThrow(NoSuchMethodException::new);
     }
 
+    // Call the method parameters validator according the method is varargs or not
     private static boolean checkIfMethodsParamsAreCompatible(Method method, Class<?>... argsType) {
         int numberOfArgs = method.getParameterTypes().length;
         return IntStream
@@ -45,7 +55,7 @@ public class UsingMultipleDispatch {
                 .allMatch(i -> method.getParameterTypes()[i].isAssignableFrom(argsType[i]));
     }
 
-    // compare the in terms of hierarchy of t
+    // Compare two methods according the args types hierarchy
     static Comparator<Method> argsTypeHierarchyComparator = (m1, m2) -> {
         for (int i = 0; i < m1.getParameterTypes().length; i++) {
             Class<?> c1 = m1.getParameterTypes()[i];
@@ -61,18 +71,16 @@ public class UsingMultipleDispatch {
         return 0;
     };
 
+    // Compare two methods according their declaring class.
     static Comparator<Method> receiverTypeHierarchyComparator = (m1, m2) -> {
         Class<?> c1 = m1.getDeclaringClass();
         Class<?> c2 = m2.getDeclaringClass();
-        boolean c1IsSubType = c1.isAssignableFrom(c2);
-        boolean c2IsSubtype = c2.isAssignableFrom(c1);
+        boolean c1IsSubType = c2.isAssignableFrom(c1);
+        boolean c2IsSubtype = c1.isAssignableFrom(c2);
         if (c1IsSubType && !c2IsSubtype)
-            return 1;
-        if (c2IsSubtype && !c1IsSubType)
             return -1;
+        if (c2IsSubtype && !c1IsSubType)
+            return 1;
         return 0;
     };
 }
-
-
-

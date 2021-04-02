@@ -1,4 +1,4 @@
 package example1;
 
-interface Circle {
+public interface Circle extends Open, Closed {
 }

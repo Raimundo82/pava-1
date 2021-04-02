@@ -29,28 +29,40 @@ public class UsingMultipleDispatchExtended {
 
     public static Object invoke(Object receiver, String name, Object... args) {
 
-        // First check if it is possible to call a method with primitive types
-        if (hasWrappedClasses(args)) {
-            Class<?>[] argsPrimitiveTypes = new Class<?>[args.length];
-            for (int i = 0; i < args.length; i++)
-                argsPrimitiveTypes[i] = isWrapped(args[i]) ?
-                        WRAPPER_TO_PRIMITIVE.get(args[i].getClass()) :
-                        args[i].getClass();
-            try {
-                return invokeMethod(receiver, name, argsPrimitiveTypes, args);
-            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {
-            }
-        }
+        Class<?>[] argsTypes;
 
-        Class<?>[] argsTypes = Arrays.stream(args).map(Object::getClass).toArray(Class<?>[]::new);
+        // First it tries to find and call the most specific method with primitive types
+        argsTypes = Arrays
+                .stream(args)
+                .map(arg -> arg == null ? Object.class : arg.getClass())
+                .map(type -> isWrappedType(type) ? WRAPPER_TO_PRIMITIVE.get(type) : type)
+                .toArray(Class[]::new);
         try {
             return invokeMethod(receiver, name, argsTypes, args);
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
-            throw new RuntimeException(ex);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {
+
+            // Then, if a exception is caught, it retries it with no primitive types
+            argsTypes = Arrays
+                    .stream(args)
+                    .map(o -> o == null ? Object.class : o.getClass())
+                    .toArray(Class[]::new);
+            try {
+                return invokeMethod(receiver, name, argsTypes, args);
+            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
+                throw new RuntimeException(ex);
+            }
         }
     }
 
-    private static Object invokeMethod(Object receiver, String name, Class<?>[] argsTypes, Object[] args) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    private static boolean isWrappedType(Class<?> type) {
+        return WRAPPER_TO_PRIMITIVE.containsKey(type);
+    }
+
+    // Invoke a non varargs method or call specific method do deal with varargs method
+    private static Object invokeMethod(Object receiver,
+                                       String name,
+                                       Class<?>[] argsTypes,
+                                       Object[] args) throws NoSuchMethodException,IllegalAccessException, InvocationTargetException {
         Method method = bestMethod(receiver.getClass(), name, argsTypes);
 
         if (method.isVarArgs()) {
@@ -59,24 +71,37 @@ public class UsingMultipleDispatchExtended {
         return method.invoke(receiver, args);
     }
 
-    private static Object varargsMethodInvoke(Object receiver, Object[] args, Method method) throws IllegalAccessException, InvocationTargetException {
+    // Build and fill the type array needed to invoke a varargs method
+    private static Object varargsMethodInvoke(Object receiver,
+                                              Object[] args,
+                                              Method method) throws IllegalAccessException, InvocationTargetException {
+
         int methodParams = method.getParameterTypes().length;
         Class<?> arrayComponentType = method.getParameterTypes()[methodParams - 1].getComponentType();
         Object varargsArray = Array.newInstance(arrayComponentType, args.length - methodParams + 1);
+
         if (methodParams == 1) {
-            IntStream.range(0, args.length).forEach(i -> Array.set(varargsArray, i, args[i]));
+            IntStream
+                    .range(0, args.length)
+                    .forEach(i -> Array.set(varargsArray, i, args[i]));
             return method.invoke(receiver, varargsArray);
         } else {
-            IntStream.range(0, args.length - methodParams + 1).forEach(i -> Array.set(varargsArray, i, args[args.length - methodParams + i]));
+            IntStream
+                    .range(0, args.length - methodParams + 1)
+                    .forEach(i -> Array.set(varargsArray, i, args[args.length - methodParams + i]));
             Object[] newArgs = (Object[]) Array.newInstance(Object.class, methodParams);
-            IntStream.range(0, methodParams - 1).forEach(i -> Array.set(newArgs, i, args[i]));
+            IntStream
+                    .range(0, methodParams - 1)
+                    .forEach(i -> Array.set(newArgs, i, args[i]));
             Array.set(newArgs, methodParams - 1, varargsArray);
             return method.invoke(receiver, newArgs);
         }
     }
 
-    private static Method bestMethod(Class<?> receiverType, String name, Class<?>... argsType) throws
-            NoSuchMethodException {
+    // Get a method from receiver type or its superclasses types, whom parameters types match exactly the args types
+    private static Method bestMethod(Class<?> receiverType,
+                                     String name,
+                                     Class<?>... argsType) throws NoSuchMethodException {
         try {
             return receiverType.getMethod(name, argsType);
         } catch (NoSuchMethodException e) {
@@ -84,8 +109,10 @@ public class UsingMultipleDispatchExtended {
         }
     }
 
-    private static Method getMostSpecificMethod(Class<?> receiverType, String name, Class<?>[] argsType) throws
-            NoSuchMethodException {
+    // Filter and sort the methods according the specification project to return the most specific one
+    private static Method getMostSpecificMethod(Class<?> receiverType,
+                                                String name,
+                                                Class<?>[] argsType) throws NoSuchMethodException {
         return Arrays.stream(receiverType.getMethods())
                 .filter(method -> method.getName().equals(name))
                 .filter(method -> method.getParameterTypes().length == argsType.length || method.isVarArgs())
@@ -94,14 +121,18 @@ public class UsingMultipleDispatchExtended {
                 .orElseThrow(NoSuchMethodException::new);
     }
 
+    // Call the method parameters validator according the method is varargs or not
     static boolean checkIfMethodsParamsAreCompatible(Method method, Class<?>... argsType) {
         int numberOfArgs = method.getParameterTypes().length;
         return method.isVarArgs() ?
-                checkIfVarArgsMethodParamsAreValid(method, argsType) :
+                checkIfVarArgsMethodParamsAreCompatible(method, argsType) :
                 argsAreCompatibleWithMethodParams(method, numberOfArgs, argsType);
     }
 
-    private static boolean checkIfVarArgsMethodParamsAreValid(Method method, Class<?>... argsType) {
+    // Validate varargs method parameters including the possibility of being a method
+    // with varargs and non varargs parameters
+    private static boolean checkIfVarArgsMethodParamsAreCompatible(Method method,
+                                                                   Class<?>... argsType) {
         int methodParams = method.getParameterTypes().length;
         if (methodParams == 1) {
             return argsAreCompatibleWithMethodVarargsComponentType(method, argsType.length, argsType);
@@ -113,22 +144,30 @@ public class UsingMultipleDispatchExtended {
         }
     }
 
-    private static boolean argsAreCompatibleWithMethodParams(Method method, int numberOfArgs, Class<?>[] argsType) {
+    // validate non varargs method parameters according arguments
+    private static boolean argsAreCompatibleWithMethodParams(Method method,
+                                                             int numberOfArgs,
+                                                             Class<?>[] argsType) {
         return IntStream
                 .range(0, numberOfArgs)
                 .allMatch(i -> method.getParameterTypes()[i].isAssignableFrom(argsType[i]));
     }
 
+    // validate varargs method parameters according arguments
+    private static boolean argsAreCompatibleWithMethodVarargsComponentType(Method method,
+                                                                           int numberOfVarargs,
+                                                                           Class<?>[] argsType) {
+        Class<?> varargsComponentType = method
+                .getParameterTypes()[method.getParameterTypes().length - 1]
+                .getComponentType();
 
-    private static boolean argsAreCompatibleWithMethodVarargsComponentType(Method method, int numberOfVarargs, Class<?>[]
-            argsType) {
-        Class<?> varargsComponentType = method.getParameterTypes()[method.getParameterTypes().length - 1].getComponentType();
         return IntStream
                 .range(argsType.length - numberOfVarargs, argsType.length)
                 .allMatch(i -> varargsComponentType.isAssignableFrom(argsType[i]));
     }
 
-
+    // Compare two methods according the args types hierarchy including varargs methods. In same circumstances, a non varargs method
+    // will be more specific then a varargs method
     static Comparator<Method> argsTypeHierarchyComparator = (m1, m2) -> {
         int m1Params = m1.getParameterTypes().length;
         int m2Params = m2.getParameterTypes().length;
@@ -145,49 +184,43 @@ public class UsingMultipleDispatchExtended {
             else if (c2IsSubtype && !c1IsSubType)
                 return 1;
         }
-        if(m1.isVarArgs() && !m2.isVarArgs())
+        if (m1.isVarArgs() && !m2.isVarArgs())
             return 1;
-        if(!m1.isVarArgs() && m2.isVarArgs())
+        if (!m1.isVarArgs() && m2.isVarArgs())
             return -1;
         return 0;
     };
 
-    private static Class<?> getParameterType(Method method, int m1Params, int i) {
+    // Return the nth parameter type according if it is a varargs method or not
+    private static Class<?> getParameterType(Method method, int methodParams, int n) {
         Class<?> c1;
         if (method.isVarArgs()) {
-            c1 = isMethodLastParameter(i, method) ?
-                    method.getParameterTypes()[m1Params - 1].getComponentType() :
-                    method.getParameterTypes()[i];
+            c1 = isMethodLastParameter(n, method) ?
+                    method.getParameterTypes()[methodParams - 1].getComponentType() :
+                    method.getParameterTypes()[n];
         } else {
-            c1 = method.getParameterTypes()[i];
+            c1 = method.getParameterTypes()[n];
         }
         return c1;
     }
 
-    static boolean isMethodLastParameter(int i, Method method) {
-        return i >= method.getParameterTypes().length - 1;
+    // Used in varargs methods when they are being compared with non varargs methods and
+    // it is needed to extend the varargs component type through the iterations
+    static boolean isMethodLastParameter(int n, Method method) {
+        return n >= method.getParameterTypes().length - 1;
     }
 
+    // Compare two methods according their declaring class.
     static Comparator<Method> receiverTypeHierarchyComparator = (m1, m2) -> {
         Class<?> c1 = m1.getDeclaringClass();
         Class<?> c2 = m2.getDeclaringClass();
-        boolean c1IsSubType = c1.isAssignableFrom(c2);
-        boolean c2IsSubtype = c2.isAssignableFrom(c1);
+        boolean c1IsSubType = c2.isAssignableFrom(c1);
+        boolean c2IsSubtype = c1.isAssignableFrom(c2);
         if (c1IsSubType && !c2IsSubtype)
-            return 1;
-        if (c2IsSubtype && !c1IsSubType)
             return -1;
+        if (c2IsSubtype && !c1IsSubType)
+            return 1;
         return 0;
     };
 
-    private static boolean hasWrappedClasses(Object... args) {
-        return Arrays.stream(args)
-                .anyMatch(arg -> WRAPPER_TO_PRIMITIVE.containsKey(arg.getClass()));
-    }
-
-    private static boolean isWrapped(Object arg) {
-        return WRAPPER_TO_PRIMITIVE.containsKey(arg.getClass());
-    }
-
 }
-
