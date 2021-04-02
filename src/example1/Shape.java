@@ -1,5 +1,5 @@
 package example1;
 
-class Shape implements Line, Circle {
+public class Shape implements Line, Circle {
 
 }

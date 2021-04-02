@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class UsingMultipleDispatchExtended {
 
@@ -62,7 +63,7 @@ public class UsingMultipleDispatchExtended {
     private static Object invokeMethod(Object receiver,
                                        String name,
                                        Class<?>[] argsTypes,
-                                       Object[] args) throws NoSuchMethodException,IllegalAccessException, InvocationTargetException {
+                                       Object[] args) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         Method method = bestMethod(receiver.getClass(), name, argsTypes);
 
         if (method.isVarArgs()) {
@@ -117,7 +118,9 @@ public class UsingMultipleDispatchExtended {
                 .filter(method -> method.getName().equals(name))
                 .filter(method -> method.getParameterTypes().length == argsType.length || method.isVarArgs())
                 .filter(method -> checkIfMethodsParamsAreCompatible(method, argsType))
-                .min(receiverTypeHierarchyComparator.thenComparing(argsTypeHierarchyComparator))
+                .min((receiverTypeHierarchyComparator)
+                        .thenComparing(argsTypeHierarchyComparator)
+                        .thenComparing(getArgsTypeInterfaceHierarchyComparator(argsType)))
                 .orElseThrow(NoSuchMethodException::new);
     }
 
@@ -144,7 +147,8 @@ public class UsingMultipleDispatchExtended {
         }
     }
 
-    // validate non varargs method parameters according arguments
+    // validate non varargs method parameters according arguments.It accepts all the types that
+    // are extended or implemented by arg type
     private static boolean argsAreCompatibleWithMethodParams(Method method,
                                                              int numberOfArgs,
                                                              Class<?>[] argsType) {
@@ -190,6 +194,51 @@ public class UsingMultipleDispatchExtended {
             return -1;
         return 0;
     };
+
+    // Compare each method parameter with interfaces implemented by the argument, giving priority to
+    // the one that is subtype of the other and it is implemented first on argument type class
+    static Comparator<Method> getArgsTypeInterfaceHierarchyComparator(Class<?>[] argsType) {
+        return ((m1, m2) -> {
+            for (int i = 0; i < argsType.length; i++) {
+                for (Class<?> classInterface : getAllInterfaces(argsType[i].getInterfaces())) {
+                    if (paramTypeEqualsToArgInterfaceType(m1, i, classInterface) &&
+                            !paramTypeEqualsToArgInterfaceType(m2, i, classInterface))
+                        return -1;
+                    if (!paramTypeEqualsToArgInterfaceType(m1, i, classInterface) &&
+                            paramTypeEqualsToArgInterfaceType(m2, i, classInterface))
+                        return 1;
+                }
+            }
+            return 0;
+        });
+    }
+
+    private static boolean paramTypeEqualsToArgInterfaceType(Method m, int i, Class<?> classInterface) {
+        return m.getParameterTypes()[i].equals(classInterface);
+    }
+
+    // recursively return all interfaces implemented
+    public static Class<?>[] getAllInterfaces(Class<?>[] interfaces) {
+        return Arrays
+                .stream(interfaces)
+                .flatMap(in -> Stream
+                        .concat(Stream.of(in), Stream.of(getAllInterfaces(in.getInterfaces()))))
+                .distinct()
+                .sorted(classHierarchyComparator)
+                .toArray(Class[]::new);
+    }
+
+    // compare two types according if one is subtype of the other
+    static Comparator<Class<?>> classHierarchyComparator = (c1, c2) -> {
+        boolean c1IsSubType = c2.isAssignableFrom(c1);
+        boolean c2IsSubType = c1.isAssignableFrom(c2);
+        if (c1IsSubType && !c2IsSubType)
+            return -1;
+        if (!c1IsSubType && c2IsSubType)
+            return 1;
+        return 0;
+    };
+
 
     // Return the nth parameter type according if it is a varargs method or not
     private static Class<?> getParameterType(Method method, int methodParams, int n) {

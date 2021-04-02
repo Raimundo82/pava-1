@@ -1,5 +1,5 @@
 package example1;
 
-public interface Line extends Open, Closed {
+public interface Line extends Closed, Open {
 
 }
