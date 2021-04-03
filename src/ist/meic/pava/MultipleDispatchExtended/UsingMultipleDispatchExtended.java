@@ -4,10 +4,7 @@ package ist.meic.pava.MultipleDispatchExtended;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -30,11 +27,11 @@ public class UsingMultipleDispatchExtended {
 
     public static Object invoke(Object receiver, String name, Object... args) {
 
+        args = args == null ? args = new Object[]{null} : args;
         Class<?>[] argsTypes;
 
-        // First it tries to find and call the most specific method with primitive types
-        argsTypes = Arrays
-                .stream(args)
+            // First it tries to find and call the most specific method with primitive types
+        argsTypes = Arrays.stream(args)
                 .map(arg -> arg == null ? Object.class : arg.getClass())
                 .map(type -> isWrappedType(type) ? WRAPPER_TO_PRIMITIVE.get(type) : type)
                 .toArray(Class[]::new);
@@ -43,8 +40,7 @@ public class UsingMultipleDispatchExtended {
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {
 
             // Then, if a exception is caught, it retries it with no primitive types
-            argsTypes = Arrays
-                    .stream(args)
+            argsTypes = Arrays.stream(args)
                     .map(o -> o == null ? Object.class : o.getClass())
                     .toArray(Class[]::new);
             try {
@@ -125,7 +121,7 @@ public class UsingMultipleDispatchExtended {
     }
 
     // Call the method parameters validator according the method is varargs or not
-    static boolean checkIfMethodsParamsAreCompatible(Method method, Class<?>... argsType) {
+    private static boolean checkIfMethodsParamsAreCompatible(Method method, Class<?>... argsType) {
         int numberOfArgs = method.getParameterTypes().length;
         return method.isVarArgs() ?
                 checkIfVarArgsMethodParamsAreCompatible(method, argsType) :
@@ -170,9 +166,9 @@ public class UsingMultipleDispatchExtended {
                 .allMatch(i -> varargsComponentType.isAssignableFrom(argsType[i]));
     }
 
-    // Compare two methods according the args types hierarchy including varargs methods. In same circumstances, a non varargs method
-    // will be more specific then a varargs method
-    static Comparator<Method> argsTypeHierarchyComparator = (m1, m2) -> {
+    // Compare two methods according the args types hierarchy including varargs methods. In same circumstances,
+    // a non varargs method will be more specific then a varargs method
+    private static final Comparator<Method> argsTypeHierarchyComparator = (m1, m2) -> {
         int m1Params = m1.getParameterTypes().length;
         int m2Params = m2.getParameterTypes().length;
         for (int i = 0; i < Integer.max(m1Params, m2Params); i++) {
@@ -197,7 +193,7 @@ public class UsingMultipleDispatchExtended {
 
     // Compare each method parameter with interfaces implemented by the argument, giving priority to
     // the one that is subtype of the other and it is implemented first on argument type class
-    static Comparator<Method> getArgsTypeInterfaceHierarchyComparator(Class<?>[] argsType) {
+    private static Comparator<Method> getArgsTypeInterfaceHierarchyComparator(Class<?>[] argsType) {
         return ((m1, m2) -> {
             for (int i = 0; i < argsType.length; i++) {
                 for (Class<?> classInterface : getAllInterfaces(argsType[i].getInterfaces())) {
@@ -218,7 +214,7 @@ public class UsingMultipleDispatchExtended {
     }
 
     // recursively return all interfaces implemented
-    public static Class<?>[] getAllInterfaces(Class<?>[] interfaces) {
+    private static Class<?>[] getAllInterfaces(Class<?>[] interfaces) {
         return Arrays
                 .stream(interfaces)
                 .flatMap(in -> Stream
@@ -229,7 +225,7 @@ public class UsingMultipleDispatchExtended {
     }
 
     // compare two types according if one is subtype of the other
-    static Comparator<Class<?>> classHierarchyComparator = (c1, c2) -> {
+    private static Comparator<Class<?>> classHierarchyComparator = (c1, c2) -> {
         boolean c1IsSubType = c2.isAssignableFrom(c1);
         boolean c2IsSubType = c1.isAssignableFrom(c2);
         if (c1IsSubType && !c2IsSubType)
@@ -255,12 +251,12 @@ public class UsingMultipleDispatchExtended {
 
     // Used in varargs methods when they are being compared with non varargs methods and
     // it is needed to extend the varargs component type through the iterations
-    static boolean isMethodLastParameter(int n, Method method) {
+    private static boolean isMethodLastParameter(int n, Method method) {
         return n >= method.getParameterTypes().length - 1;
     }
 
     // Compare two methods according their declaring class.
-    static Comparator<Method> receiverTypeHierarchyComparator = (m1, m2) -> {
+    private static final Comparator<Method> receiverTypeHierarchyComparator = (m1, m2) -> {
         Class<?> c1 = m1.getDeclaringClass();
         Class<?> c2 = m2.getDeclaringClass();
         boolean c1IsSubType = c2.isAssignableFrom(c1);

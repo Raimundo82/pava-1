@@ -6,14 +6,15 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.stream.IntStream;
 
+
 public class UsingMultipleDispatch {
 
 
     public static Object invoke(Object receiver, String name, Object... args) {
 
-        Class<?>[] argsTypes = Arrays
-                .stream(args)
-                .map(o -> o == null ? Object.class : o.getClass())
+        args = args == null ? args = new Object[]{null} : args;
+        Class<?>[] argsTypes = Arrays.stream(args)
+                .map(arg -> arg == null ? Object.class : arg.getClass())
                 .toArray(Class[]::new);
 
         try {

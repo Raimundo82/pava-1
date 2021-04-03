@@ -22,22 +22,19 @@ public class Screen extends Device {
         System.err.println("drawing a circle on screen with pencil!");
     }
 
-    public void draw(Shape c1,Shape s,Shape c2) {
+
+/*    public void draw(Shape c1, Shape s, Shape c2) {
         System.err.println("draw three what on screen?");
     }
 
-    public void draw(Circle ...circles) {
+    public void draw(Circle... circles) {
         System.err.println("draw circles on screen!");
     }
 
 
-
-    public void draw(Shape ...shapes) {
+    public void draw(Shape... shapes) {
         System.err.println("draw what on screen?");
-    }
-
-
-
+    }*/
 
 
 }

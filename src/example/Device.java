@@ -1,16 +1,24 @@
 package example;
 
-import java.util.Arrays;
-
 public class Device {
+
+    public void draw(Object...o) {
+        System.out.println("test");
+    }
+
     public void draw(Shape s, Brush b) {
         System.err.println("draw what where and with what?");
     }
 
-    public void draw(Shape s, Pencil p) {
-        System.err.println("draw what where and with pencil?");
+    public void draw(Line l, Brush b) {
+        System.err.println("draw a line where and with what?");
     }
 
+    public void draw(Circle c, Brush b) {
+        System.err.println("draw a circle where and with what?");
+    }
+
+/*
     public void draw(Shape s, Crayon c) {
         System.err.println("draw what where and with crayon?");
     }
@@ -50,6 +58,6 @@ public class Device {
 
     public void sum(int i, int j) {
         System.err.println(i + j);
-    }
+    }*/
 
 }

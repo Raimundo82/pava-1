@@ -14,7 +14,6 @@ public class Example {
 
         Shape shape = new Shape();
         UsingMultipleDispatchExtended.invoke(new Device(), "draw", shape,shape);
-        System.out.println(Arrays.toString(UsingMultipleDispatchExtended.getAllInterfaces(Shape.class.getInterfaces())));
 
     }
 }

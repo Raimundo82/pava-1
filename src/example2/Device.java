@@ -8,7 +8,5 @@ public class Device {
     public void draw(Line s) {
         System.err.println(("draw line where?"));
     }
-    public void draw(Shape s) {
-        System.err.println(("draw what where?"));
-    }
+
 }
