@@ -41,20 +41,22 @@ public class UsingMultipleDispatch {
         try {
             return receiverType.getMethod(name, argsType);
         } catch (NoSuchMethodException e) {
-            return getMostSpecificMethod(receiverType, name, argsType);
+            Method[] mostSpecificMethod = getMostSpecificMethod(receiverType, name, argsType);
+            return mostSpecificMethod[0];
         }
     }
 
     // Filter and sort the methods according the specification project to return the most specific one
-    private static Method getMostSpecificMethod(Class<?> receiverType,
+    private static Method[] getMostSpecificMethod(Class<?> receiverType,
                                                 String name,
                                                 Class<?>[] argsType) throws NoSuchMethodException {
         return Arrays.stream(receiverType.getMethods())
                 .filter(method -> method.getName().equals(name))
                 .filter(method -> method.getParameterTypes().length == argsType.length)
                 .filter(method -> checkIfMethodsParamsAreCompatible(method, argsType))
-                .min(receiverTypeHierarchyComparator.thenComparing(argsTypeHierarchyComparator))
-                .orElseThrow(NoSuchMethodException::new);
+                .sorted(receiverTypeHierarchyComparator.thenComparing(argsTypeHierarchyComparator))
+                .toArray(Method[]::new);
+        //.orElseThrow(NoSuchMethodException::new);
     }
 
     // Call the method parameters validator according the method is varargs or not

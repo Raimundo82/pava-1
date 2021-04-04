@@ -31,8 +31,8 @@ public class UsingMultipleDispatchExtended {
         private static final String NO_METHOD_AVAILABLE = "\nNo Method found with name %s on class %s compatible with parameters: %s";
 
 
-        public MultipleDispatchExtendedException(String receiver, String name, String types,Throwable t) {
-            super(String.format(NO_METHOD_AVAILABLE, receiver, name, types),t);
+        public MultipleDispatchExtendedException(String receiver, String name, String types, Throwable t) {
+            super(String.format(NO_METHOD_AVAILABLE, receiver, name, types), t);
         }
     }
 
@@ -261,14 +261,14 @@ public class UsingMultipleDispatchExtended {
 
 
     // Return the nth parameter type according if it is a varargs method or not
-    private static Class<?> getParameterType(Method method, int methodParams, int n) {
+    private static Class<?> getParameterType(Method method, int paramLength, int index) {
         Class<?> c1;
         if (method.isVarArgs()) {
-            c1 = isMethodLastParameter(n, method) ?
-                    method.getParameterTypes()[methodParams - 1].getComponentType() :
-                    method.getParameterTypes()[n];
+            c1 = isMethodLastParameter(index, method) ?
+                    method.getParameterTypes()[paramLength - 1].getComponentType() :
+                    method.getParameterTypes()[index];
         } else {
-            c1 = method.getParameterTypes()[n];
+            c1 = method.getParameterTypes()[index];
         }
         return c1;
     }
@@ -285,6 +285,9 @@ public class UsingMultipleDispatchExtended {
         Class<?> c2 = m2.getDeclaringClass();
         boolean c1IsSubType = c2.isAssignableFrom(c1);
         boolean c2IsSubtype = c1.isAssignableFrom(c2);
+        if (getParameterType(m1, 1, 0).isInterface() &&
+                getParameterType(m2, 1, 0).isInterface())
+            return 0;
         if (c1IsSubType && !c2IsSubtype)
             return -1;
         if (c2IsSubtype && !c1IsSubType)

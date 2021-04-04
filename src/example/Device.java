@@ -1,10 +1,10 @@
 package example;
 
-import java.util.*;
+import java.util.Collection;
 
 public class Device {
 
-    public void draw(Object... o) {
+/*    public void draw(Object... o) {
         System.out.println("test");
     }
 
@@ -20,32 +20,44 @@ public class Device {
         System.err.println("This method receives a Collection");
     }
 
-  /*  public void draw(Iterable<?> iterable) {
+    public void draw(Iterable<?> iterable) {
         System.err.println("This method receives a Iterable");
     }
-*/
     public void draw(Line l) {
         System.out.println("Draw a line where?");
-    }
+    }*/
 
 
     public void draw(Shape s, Brush b) {
-        System.err.println("draw what where and with what?");
+        System.err.println("drawing what where and with what?");
     }
 
+
+    public void draw(Line l, Brush b) {
+        System.err.println("drawing a line where and with what?");
+    }
+
+    public void draw(Circle c, Brush b) {
+        System.err.println("draw a circle where and with what?");
+    }
+
+    public void draw(Shape s1, Shape s2, Brush b) {
+        System.err.println("drawing on what two what with what?");
+    }
+
+    public void draw(Shape s1, Circle s2, Brush b) {
+        System.err.println("drawing on what one circle and what with what?");
+    }
+
+/*
 
     public void draw(Shape s, Crayon c) {
         System.err.println("draw what where and with crayon?");
     }
 
 
-    public void draw(Line l, Brush b) {
-        System.err.println("draw a line where and with what?");
-    }
 
-    public void draw(Circle c, Brush b) {
-        System.err.println("draw a circle where and with what?");
-    }
+
 
     public void draw(Shape ...shapes) {
         System.err.println("draw what shapes where?");
@@ -73,6 +85,6 @@ public class Device {
 
     public void sum(int i, int j) {
         System.err.println(i + j);
-    }
+    }*/
 
 }
