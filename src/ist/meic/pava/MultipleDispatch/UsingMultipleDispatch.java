@@ -9,6 +9,15 @@ import java.util.stream.IntStream;
 
 public class UsingMultipleDispatch {
 
+    public static class MultipleDispatchException extends RuntimeException {
+        private static final String NO_METHOD_AVAILABLE = "\nNo Method found with name %s on class %s compatible with parameters: %s";
+
+
+        public MultipleDispatchException(String receiver, String name, String types, Throwable t) {
+            super(String.format(NO_METHOD_AVAILABLE, receiver, name, types), t);
+        }
+    }
+
 
     public static Object invoke(Object receiver, String name, Object... args) {
 
@@ -21,7 +30,7 @@ public class UsingMultipleDispatch {
             Method method = bestMethod(receiver.getClass(), name, argsTypes);
             return method.invoke(receiver, args);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            throw new RuntimeException(e);
+            throw new MultipleDispatchException(name, receiver.getClass().getName(), Arrays.toString(argsTypes), e);
         }
     }
 

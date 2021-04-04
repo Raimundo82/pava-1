@@ -3,7 +3,7 @@ package example;
 import java.util.*;
 import java.util.function.UnaryOperator;
 
-public class Shape implements Iterable, Set, List  {
+public class Shape implements Iterable, Collection, Set, List  {
 
     @Override
     public boolean addAll(int i, Collection collection) {

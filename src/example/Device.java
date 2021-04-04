@@ -16,6 +16,14 @@ public class Device {
         System.err.println("This method receives a set");
     }
 
+    public void draw(Collection<?> collection) {
+        System.err.println("This method receives a Collection");
+    }
+
+  /*  public void draw(Iterable<?> iterable) {
+        System.err.println("This method receives a Iterable");
+    }
+*/
     public void draw(Line l) {
         System.out.println("Draw a line where?");
     }

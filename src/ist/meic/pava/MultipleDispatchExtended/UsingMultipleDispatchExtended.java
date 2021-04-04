@@ -27,6 +27,15 @@ public class UsingMultipleDispatchExtended {
         WRAPPER_TO_PRIMITIVE.put(Byte.class, byte.class);
     }
 
+    public static class MultipleDispatchExtendedException extends RuntimeException {
+        private static final String NO_METHOD_AVAILABLE = "\nNo Method found with name %s on class %s compatible with parameters: %s";
+
+
+        public MultipleDispatchExtendedException(String receiver, String name, String types,Throwable t) {
+            super(String.format(NO_METHOD_AVAILABLE, receiver, name, types),t);
+        }
+    }
+
 
     public static Object invoke(Object receiver, String name, Object... args) {
 
@@ -49,7 +58,7 @@ public class UsingMultipleDispatchExtended {
             try {
                 return invokeMethod(receiver, name, argsTypes, args);
             } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
-                throw new RuntimeException(ex);
+                throw new MultipleDispatchExtendedException(name, receiver.getClass().getName(), Arrays.toString(argsTypes), ex);
             }
         }
     }
