@@ -23,7 +23,7 @@ public class Screen extends Device {
     }
 
 
-/*    public void draw(Shape c1, Shape s, Shape c2) {
+    public void draw(Shape c1, Shape s, Shape c2) {
         System.err.println("draw three what on screen?");
     }
 
@@ -34,7 +34,7 @@ public class Screen extends Device {
 
     public void draw(Shape... shapes) {
         System.err.println("draw what on screen?");
-    }*/
+    }
 
 
 }

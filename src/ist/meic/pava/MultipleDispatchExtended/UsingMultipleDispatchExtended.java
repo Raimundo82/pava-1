@@ -4,7 +4,10 @@ package ist.meic.pava.MultipleDispatchExtended;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -30,7 +33,7 @@ public class UsingMultipleDispatchExtended {
         args = args == null ? args = new Object[]{null} : args;
         Class<?>[] argsTypes;
 
-            // First it tries to find and call the most specific method with primitive types
+        // First it tries to find and call the most specific method with primitive types
         argsTypes = Arrays.stream(args)
                 .map(arg -> arg == null ? Object.class : arg.getClass())
                 .map(type -> isWrappedType(type) ? WRAPPER_TO_PRIMITIVE.get(type) : type)
@@ -115,8 +118,9 @@ public class UsingMultipleDispatchExtended {
                 .filter(method -> method.getParameterTypes().length == argsType.length || method.isVarArgs())
                 .filter(method -> checkIfMethodsParamsAreCompatible(method, argsType))
                 .min((receiverTypeHierarchyComparator)
-                        .thenComparing(argsTypeHierarchyComparator)
-                        .thenComparing(getArgsTypeInterfaceHierarchyComparator(argsType)))
+                        .thenComparing(parameterTypesHierarchyComparator(false))
+                        .thenComparing(parameterTypesHierarchyComparator(true))
+                        .thenComparing(compareTypesOfSameHierarchy(argsType)))
                 .orElseThrow(NoSuchMethodException::new);
     }
 
@@ -166,42 +170,52 @@ public class UsingMultipleDispatchExtended {
                 .allMatch(i -> varargsComponentType.isAssignableFrom(argsType[i]));
     }
 
-    // Compare two methods according the args types hierarchy including varargs methods. In same circumstances,
-    // a non varargs method will be more specific then a varargs method
-    private static final Comparator<Method> argsTypeHierarchyComparator = (m1, m2) -> {
-        int m1Params = m1.getParameterTypes().length;
-        int m2Params = m2.getParameterTypes().length;
-        for (int i = 0; i < Integer.max(m1Params, m2Params); i++) {
+    // Parameter method comparator that works bottom up left to right order when !isInInterfaceMode and
+    // in same hierarchy level of all parameters, it gives priority to non varargs methods.
+    // When isInInterfaceMode it works in top down left right order, do find the method with the most commons
+    // abstracts interfaces that are implemented by the arguments.
+    private static Comparator<Method> parameterTypesHierarchyComparator(boolean isInInterfaceMode) {
+        return ((m1, m2) -> {
+            int m1Params = m1.getParameterTypes().length;
+            int m2Params = m2.getParameterTypes().length;
+            for (int i = 0; i < Integer.max(m1Params, m2Params); i++) {
 
-            Class<?> c1 = getParameterType(m1, m1Params, i);
-            Class<?> c2 = getParameterType(m2, m2Params, i);
+                Class<?> c1 = getParameterType(m1, m1Params, i);
+                Class<?> c2 = getParameterType(m2, m2Params, i);
 
-            boolean c1IsSubType = c2.isAssignableFrom(c1);
-            boolean c2IsSubtype = c1.isAssignableFrom(c2);
+                boolean c1IsSubType = c2.isAssignableFrom(c1);
+                boolean c2IsSubtype = c1.isAssignableFrom(c2);
+                boolean oneIsInterface = c1.isInterface() || c2.isInterface();
+                boolean oneIsVarargs = m1.isVarArgs() || m2.isVarArgs();
 
-            if (c1IsSubType && !c2IsSubtype)
-                return -1;
-            else if (c2IsSubtype && !c1IsSubType)
+                if (c1.isInterface() && c2.isInterface() && !isInInterfaceMode)
+                    return 0;
+                if (c1IsSubType && !c2IsSubtype && !(oneIsInterface && oneIsVarargs))
+                    return isInInterfaceMode ? 1 : -1;
+                else if (c2IsSubtype && !c1IsSubType && !(oneIsInterface && oneIsVarargs))
+                    return isInInterfaceMode ? -1 : 1;
+            }
+            if (m1.isVarArgs() && !m2.isVarArgs() && !isInInterfaceMode)
                 return 1;
-        }
-        if (m1.isVarArgs() && !m2.isVarArgs())
-            return 1;
-        if (!m1.isVarArgs() && m2.isVarArgs())
-            return -1;
-        return 0;
-    };
+            if (!m1.isVarArgs() && m2.isVarArgs() && !isInInterfaceMode)
+                return -1;
+            return 0;
 
-    // Compare each method parameter with interfaces implemented by the argument, giving priority to
-    // the one that is subtype of the other and it is implemented first on argument type class
-    private static Comparator<Method> getArgsTypeInterfaceHierarchyComparator(Class<?>[] argsType) {
+        });
+    }
+
+    // Compare each method parameter with interfaces implemented by the argument,
+    // giving priority to the one that is implemented first on argument type class
+    private static Comparator<Method> compareTypesOfSameHierarchy(Class<?>[] argsType) {
         return ((m1, m2) -> {
             for (int i = 0; i < argsType.length; i++) {
-                for (Class<?> classInterface : getAllInterfaces(argsType[i].getInterfaces())) {
-                    if (paramTypeEqualsToArgInterfaceType(m1, i, classInterface) &&
-                            !paramTypeEqualsToArgInterfaceType(m2, i, classInterface))
+                Class<?>[] allInterfaces = getAllInterfaces(argsType[i].getInterfaces());
+                for (Class<?> classInterface : allInterfaces) {
+                    if (isParamTypeEqualsToArgType(m1, i, classInterface) &&
+                            !isParamTypeEqualsToArgType(m2, i, classInterface))
                         return -1;
-                    if (!paramTypeEqualsToArgInterfaceType(m1, i, classInterface) &&
-                            paramTypeEqualsToArgInterfaceType(m2, i, classInterface))
+                    if (!isParamTypeEqualsToArgType(m1, i, classInterface) &&
+                            isParamTypeEqualsToArgType(m2, i, classInterface))
                         return 1;
                 }
             }
@@ -209,14 +223,15 @@ public class UsingMultipleDispatchExtended {
         });
     }
 
-    private static boolean paramTypeEqualsToArgInterfaceType(Method m, int i, Class<?> classInterface) {
-        return m.getParameterTypes()[i].equals(classInterface);
+    private static boolean isParamTypeEqualsToArgType(Method m, int i, Class<?> interfaceType) {
+        Class<?> parameterType = m.getParameterTypes()[i];
+        return parameterType.equals(interfaceType);
     }
 
     // recursively return all interfaces implemented
     private static Class<?>[] getAllInterfaces(Class<?>[] interfaces) {
-        return Arrays
-                .stream(interfaces)
+
+        return Arrays.stream(interfaces)
                 .flatMap(in -> Stream
                         .concat(Stream.of(in), Stream.of(getAllInterfaces(in.getInterfaces()))))
                 .distinct()
@@ -225,7 +240,7 @@ public class UsingMultipleDispatchExtended {
     }
 
     // compare two types according if one is subtype of the other
-    private static Comparator<Class<?>> classHierarchyComparator = (c1, c2) -> {
+    private static final Comparator<Class<?>> classHierarchyComparator = (c1, c2) -> {
         boolean c1IsSubType = c2.isAssignableFrom(c1);
         boolean c2IsSubType = c1.isAssignableFrom(c2);
         if (c1IsSubType && !c2IsSubType)

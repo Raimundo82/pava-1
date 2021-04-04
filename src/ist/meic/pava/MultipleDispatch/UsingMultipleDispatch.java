@@ -51,9 +51,10 @@ public class UsingMultipleDispatch {
     // Call the method parameters validator according the method is varargs or not
     private static boolean checkIfMethodsParamsAreCompatible(Method method, Class<?>... argsType) {
         int numberOfArgs = method.getParameterTypes().length;
+        Class<?>[] parameterTypes = method.getParameterTypes();
         return IntStream
                 .range(0, numberOfArgs)
-                .allMatch(i -> method.getParameterTypes()[i].isAssignableFrom(argsType[i]));
+                .allMatch(i -> parameterTypes[i].isAssignableFrom(argsType[i]) && !parameterTypes[i].isInterface());
     }
 
     // Compare two methods according the args types hierarchy
