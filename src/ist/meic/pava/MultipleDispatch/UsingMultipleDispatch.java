@@ -1,13 +1,19 @@
 package ist.meic.pava.MultipleDispatch;
 
+import ist.meic.pava.MultipleDispatchExtended.UsingMultipleDispatchExtended;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 
 public class UsingMultipleDispatch {
+
+    private UsingMultipleDispatch() {
+    }
 
     public static class MultipleDispatchException extends RuntimeException {
         private static final String NO_METHOD_AVAILABLE = "\nNo Method found with name %s on class %s compatible with parameters: %s";
@@ -21,7 +27,7 @@ public class UsingMultipleDispatch {
 
     public static Object invoke(Object receiver, String name, Object... args) {
 
-        args = args == null ? args = new Object[]{null} : args;
+        args = args == null ? new Object[]{null} : args;
         Class<?>[] argsTypes = Arrays.stream(args)
                 .map(arg -> arg == null ? Object.class : arg.getClass())
                 .toArray(Class[]::new);
@@ -29,8 +35,12 @@ public class UsingMultipleDispatch {
         try {
             Method method = bestMethod(receiver.getClass(), name, argsTypes);
             return method.invoke(receiver, args);
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            throw new MultipleDispatchException(name, receiver.getClass().getName(), Arrays.toString(argsTypes), e);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
+            throw new UsingMultipleDispatchExtended.MultipleDispatchExtendedException(
+                    name,
+                    receiver.getClass().getName(),
+                    Arrays.toString(Stream.of(argsTypes).map(Class::getName).toArray()),
+                    ex);
         }
     }
 
@@ -41,22 +51,20 @@ public class UsingMultipleDispatch {
         try {
             return receiverType.getMethod(name, argsType);
         } catch (NoSuchMethodException e) {
-            Method[] mostSpecificMethod = getMostSpecificMethod(receiverType, name, argsType);
-            return mostSpecificMethod[0];
+            return getMostSpecificMethod(receiverType, name, argsType);
         }
     }
 
     // Filter and sort the methods according the specification project to return the most specific one
-    private static Method[] getMostSpecificMethod(Class<?> receiverType,
+    private static Method getMostSpecificMethod(Class<?> receiverType,
                                                 String name,
                                                 Class<?>[] argsType) throws NoSuchMethodException {
         return Arrays.stream(receiverType.getMethods())
                 .filter(method -> method.getName().equals(name))
                 .filter(method -> method.getParameterTypes().length == argsType.length)
                 .filter(method -> checkIfMethodsParamsAreCompatible(method, argsType))
-                .sorted(receiverTypeHierarchyComparator.thenComparing(argsTypeHierarchyComparator))
-                .toArray(Method[]::new);
-        //.orElseThrow(NoSuchMethodException::new);
+                .min(receiverTypeHierarchyComparator.thenComparing(argsTypeHierarchyComparator))
+                .orElseThrow(NoSuchMethodException::new);
     }
 
     // Call the method parameters validator according the method is varargs or not

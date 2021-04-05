@@ -28,7 +28,7 @@ public class UsingMultipleDispatchExtended {
     }
 
     public static class MultipleDispatchExtendedException extends RuntimeException {
-        private static final String NO_METHOD_AVAILABLE = "\nNo Method found with name %s on class %s compatible with parameters: %s";
+        private static final String NO_METHOD_AVAILABLE = "\nNo Method found with name [%s], on class [%s], compatible with parameters: %s";
 
 
         public MultipleDispatchExtendedException(String receiver, String name, String types, Throwable t) {
@@ -39,7 +39,7 @@ public class UsingMultipleDispatchExtended {
 
     public static Object invoke(Object receiver, String name, Object... args) {
 
-        args = args == null ? args = new Object[]{null} : args;
+        args = args == null ? new Object[]{null} : args;
         Class<?>[] argsTypes;
 
         // First it tries to find and call the most specific method with primitive types
@@ -58,7 +58,11 @@ public class UsingMultipleDispatchExtended {
             try {
                 return invokeMethod(receiver, name, argsTypes, args);
             } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
-                throw new MultipleDispatchExtendedException(name, receiver.getClass().getName(), Arrays.toString(argsTypes), ex);
+                throw new MultipleDispatchExtendedException(
+                        name,
+                        receiver.getClass().getName(),
+                        Arrays.toString(Stream.of(argsTypes).map(Class::getName).toArray()),
+                        ex);
             }
         }
     }
@@ -209,7 +213,6 @@ public class UsingMultipleDispatchExtended {
             if (!m1.isVarArgs() && m2.isVarArgs() && !isInInterfaceMode)
                 return -1;
             return 0;
-
         });
     }
 
