@@ -39,7 +39,7 @@ public class UsingMultipleDispatchExtended {
 
     public static Object invoke(Object receiver, String name, Object... args) {
 
-        args = args == null ? new Object[]{null} : args;
+        args = args == null ? new Object[1] : args;
         Class<?>[] argsTypes;
 
         // First it tries to find and call the most specific method with primitive types

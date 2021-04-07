@@ -4,11 +4,15 @@ import java.util.Collection;
 
 public class Device {
 
-/*    public void draw(Object... o) {
+    public void draw(Object... o) {
         System.out.println("test");
     }
 
-    public void draw(List<?> list) {
+    public void draw() {
+        System.out.println("no arguments");
+    }
+
+/*    public void draw(List<?> list) {
         System.err.println("This method receives a List");
     }
 

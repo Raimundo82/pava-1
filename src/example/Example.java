@@ -9,6 +9,9 @@ public class Example {
         Shape[] shapes = new Shape[]{new Line(), new Circle()/*, new Square()*/};
         Brush[] brushes = new Brush[]{new Pencil(), new Crayon()};
 
+       // UsingMultipleDispatch.invoke(new Screen(),"draw");
+
+
         Shape circle = new Circle();
         Brush pencil = new Pencil();
         Device screen = new Screen();

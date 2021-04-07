@@ -1,7 +1,5 @@
 package ist.meic.pava.MultipleDispatch;
 
-import ist.meic.pava.MultipleDispatchExtended.UsingMultipleDispatchExtended;
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -16,7 +14,7 @@ public class UsingMultipleDispatch {
     }
 
     public static class MultipleDispatchException extends RuntimeException {
-        private static final String NO_METHOD_AVAILABLE = "\nNo Method found with name %s on class %s compatible with parameters: %s";
+        private static final String NO_METHOD_AVAILABLE = "\nNo Method found with name [%s], on class [%s], compatible with parameters: %s";
 
 
         public MultipleDispatchException(String receiver, String name, String types, Throwable t) {
@@ -27,7 +25,7 @@ public class UsingMultipleDispatch {
 
     public static Object invoke(Object receiver, String name, Object... args) {
 
-        args = args == null ? new Object[]{null} : args;
+        args = args == null ? new Object[1] : args;
         Class<?>[] argsTypes = Arrays.stream(args)
                 .map(arg -> arg == null ? Object.class : arg.getClass())
                 .toArray(Class[]::new);
@@ -36,7 +34,7 @@ public class UsingMultipleDispatch {
             Method method = bestMethod(receiver.getClass(), name, argsTypes);
             return method.invoke(receiver, args);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
-            throw new UsingMultipleDispatchExtended.MultipleDispatchExtendedException(
+            throw new UsingMultipleDispatch.MultipleDispatchException(
                     name,
                     receiver.getClass().getName(),
                     Arrays.toString(Stream.of(argsTypes).map(Class::getName).toArray()),
