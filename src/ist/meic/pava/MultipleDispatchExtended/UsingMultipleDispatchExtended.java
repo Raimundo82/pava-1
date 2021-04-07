@@ -129,51 +129,51 @@ public class UsingMultipleDispatchExtended {
         return Arrays.stream(receiverType.getMethods())
                 .filter(method -> method.getName().equals(name))
                 .filter(method -> method.getParameterTypes().length == argsType.length || method.isVarArgs())
-                .filter(method -> checkIfMethodsParamsAreCompatible(method, argsType))
+                .filter(method -> isMethodApplicable(method, argsType))
                 .min((receiverTypeHierarchyComparator)
                         .thenComparing(parameterTypesHierarchyComparator(false))
                         .thenComparing(parameterTypesHierarchyComparator(true))
-                        .thenComparing(compareTypesOfSameHierarchy(argsType)))
+                        .thenComparing(sameLevelHierarchyTypesComparator(argsType)))
                 .orElseThrow(NoSuchMethodException::new);
     }
 
     // Call the method parameters validator according the method is varargs or not
-    private static boolean checkIfMethodsParamsAreCompatible(Method method, Class<?>... argsType) {
+    private static boolean isMethodApplicable(Method method, Class<?>... argsType) {
         int numberOfArgs = method.getParameterTypes().length;
         return method.isVarArgs() ?
-                checkIfVarArgsMethodParamsAreCompatible(method, argsType) :
-                argsAreCompatibleWithMethodParams(method, numberOfArgs, argsType);
+                isVarargsMethodApplicable(method, argsType) :
+                isNonVarargsMethodApplicable(method, numberOfArgs, argsType);
     }
 
     // Validate varargs method parameters including the possibility of being a method
     // with varargs and non varargs parameters
-    private static boolean checkIfVarArgsMethodParamsAreCompatible(Method method,
-                                                                   Class<?>... argsType) {
+    private static boolean isVarargsMethodApplicable(Method method,
+                                                     Class<?>... argsType) {
         int methodParams = method.getParameterTypes().length;
         if (methodParams == 1) {
-            return argsAreCompatibleWithMethodVarargsComponentType(method, argsType.length, argsType);
+            return isVarargsComponentTypeApplicable(method, argsType.length, argsType);
         } else {
             int numberOfNonVarargs = methodParams - 1;
             int numberOfVarargs = argsType.length - numberOfNonVarargs;
-            return argsAreCompatibleWithMethodParams(method, numberOfNonVarargs, argsType)
-                    && argsAreCompatibleWithMethodVarargsComponentType(method, numberOfVarargs, argsType);
+            return isNonVarargsMethodApplicable(method, numberOfNonVarargs, argsType)
+                    && isVarargsComponentTypeApplicable(method, numberOfVarargs, argsType);
         }
     }
 
     // validate non varargs method parameters according arguments.It accepts all the types that
     // are extended or implemented by arg type
-    private static boolean argsAreCompatibleWithMethodParams(Method method,
-                                                             int numberOfArgs,
-                                                             Class<?>[] argsType) {
+    private static boolean isNonVarargsMethodApplicable(Method method,
+                                                        int numberOfArgs,
+                                                        Class<?>[] argsType) {
         return IntStream
                 .range(0, numberOfArgs)
                 .allMatch(i -> method.getParameterTypes()[i].isAssignableFrom(argsType[i]));
     }
 
     // validate varargs method parameters according arguments
-    private static boolean argsAreCompatibleWithMethodVarargsComponentType(Method method,
-                                                                           int numberOfVarargs,
-                                                                           Class<?>[] argsType) {
+    private static boolean isVarargsComponentTypeApplicable(Method method,
+                                                            int numberOfVarargs,
+                                                            Class<?>[] argsType) {
         Class<?> varargsComponentType = method
                 .getParameterTypes()[method.getParameterTypes().length - 1]
                 .getComponentType();
@@ -218,7 +218,7 @@ public class UsingMultipleDispatchExtended {
 
     // Compare each method parameter with interfaces implemented by the argument,
     // giving priority to the one that is implemented first on argument type class
-    private static Comparator<Method> compareTypesOfSameHierarchy(Class<?>[] argsType) {
+    private static Comparator<Method> sameLevelHierarchyTypesComparator(Class<?>[] argsType) {
         return ((m1, m2) -> {
             for (int i = 0; i < argsType.length; i++) {
                 Class<?>[] allInterfaces = getAllInterfaces(argsType[i].getInterfaces());
