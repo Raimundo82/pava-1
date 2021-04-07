@@ -14,7 +14,8 @@ public class UsingMultipleDispatch {
     }
 
     public static class MultipleDispatchException extends RuntimeException {
-        private static final String NO_METHOD_AVAILABLE = "\nNo Method found with name [%s], on class [%s], compatible with parameters: %s";
+        private static final String NO_METHOD_AVAILABLE = "\nNo Method found with name [%s]," +
+                "on class [%s], compatible with parameters: %s";
 
 
         public MultipleDispatchException(String receiver, String name, String types, Throwable t) {
@@ -34,7 +35,7 @@ public class UsingMultipleDispatch {
             Method method = bestMethod(receiver.getClass(), name, argsTypes);
             return method.invoke(receiver, args);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
-            throw new UsingMultipleDispatch.MultipleDispatchException(
+            throw new MultipleDispatchException(
                     name,
                     receiver.getClass().getName(),
                     Arrays.toString(Stream.of(argsTypes).map(Class::getName).toArray()),

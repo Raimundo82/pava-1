@@ -3,20 +3,18 @@ package example;
 import ist.meic.pava.MultipleDispatch.UsingMultipleDispatch;
 import ist.meic.pava.MultipleDispatchExtended.UsingMultipleDispatchExtended;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
+
 public class Example {
     public static void main(String[] args) {
         Device[] devices = new Device[]{new Screen(), /*new Tablet(),*/ new Printer()/*, new Hologram()*/};
         Shape[] shapes = new Shape[]{new Line(), new Circle()/*, new Square()*/};
         Brush[] brushes = new Brush[]{new Pencil(), new Crayon()};
 
-       // UsingMultipleDispatch.invoke(new Screen(),"draw");
 
-
-        Shape circle = new Circle();
-        Brush pencil = new Pencil();
-        Device screen = new Screen();
-        screen.draw(circle,circle,pencil);
-        UsingMultipleDispatch.invoke(screen,"draw",circle,circle,pencil);
+        UsingMultipleDispatchExtended.invoke(new Device(),"draw",new ArrayList<Integer>(), new HashSet<Boolean>());
 
 
 /*        UsingMultipleDispatchExtended.invoke(d, "draw", new Shape(), new Shape(), new Shape());
