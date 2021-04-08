@@ -38,10 +38,8 @@ public class UsingMultipleDispatchExtended {
 
 
     public static Object invoke(Object receiver, String name, Object... args) {
-
         args = args == null ? new Object[1] : args;
         Class<?>[] argsTypes;
-
         // First it tries to find and call the most specific method with primitive types
         argsTypes = Arrays.stream(args)
                 .map(arg -> arg == null ? Object.class : arg.getClass())
@@ -50,7 +48,6 @@ public class UsingMultipleDispatchExtended {
         try {
             return invokeMethod(receiver, name, argsTypes, args);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {
-
             // Then, if a exception is caught, it retries it with no primitive types
             argsTypes = Arrays.stream(args)
                     .map(o -> o == null ? Object.class : o.getClass())
@@ -75,7 +72,8 @@ public class UsingMultipleDispatchExtended {
     private static Object invokeMethod(Object receiver,
                                        String name,
                                        Class<?>[] argsTypes,
-                                       Object[] args) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+                                       Object[] args
+    ) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         Method method = bestMethod(receiver.getClass(), name, argsTypes);
 
         if (method.isVarArgs()) {
@@ -101,7 +99,7 @@ public class UsingMultipleDispatchExtended {
         } else {
             IntStream
                     .range(0, args.length - methodParams + 1)
-                    .forEach(i -> Array.set(varargsArray, i, args[args.length - methodParams + i]));
+                    .forEach(i -> Array.set(varargsArray, i, args[methodParams - 1 + i]));
             Object[] newArgs = (Object[]) Array.newInstance(Object.class, methodParams);
             IntStream
                     .range(0, methodParams - 1)
@@ -115,12 +113,15 @@ public class UsingMultipleDispatchExtended {
     private static Method bestMethod(Class<?> receiverType,
                                      String name,
                                      Class<?>... argsType) throws NoSuchMethodException {
+
+
         try {
             return receiverType.getMethod(name, argsType);
         } catch (NoSuchMethodException e) {
             return getMostSpecificMethod(receiverType, name, argsType);
         }
     }
+
 
     // Filter and sort the methods according the specification project to return the most specific one
     private static Method getMostSpecificMethod(Class<?> receiverType,

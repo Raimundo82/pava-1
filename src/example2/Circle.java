@@ -1,4 +1,4 @@
 package example2;
 
-public interface Circle {
+public class Circle extends Shape {
 }

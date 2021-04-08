@@ -1,4 +1,4 @@
 package example2;
 
-public interface Line {
+public class Line extends Shape {
 }

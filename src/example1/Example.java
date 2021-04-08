@@ -11,9 +11,7 @@ public class Example {
         Circle c = new Shape();
         Open o = new Shape();
         Closed cl = new Shape();
-
         Shape shape = new Shape();
         UsingMultipleDispatchExtended.invoke(new Device(), "draw", shape,shape);
-
     }
 }

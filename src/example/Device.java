@@ -1,107 +1,17 @@
 package example;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-
 public class Device {
-
-    public void draw(Object... o) {
-        System.out.println("test");
-    }
-
-    public void draw() {
-        System.out.println("no arguments");
-    }
-
-    public void draw(List<?> list, Set<?> set) {
-        System.err.println("This method receives a List");
-    }/*
-
-    public void draw(Set<?> set) {
-        System.err.println("This method receives a set");
-    }
-
-    public void draw(Collection<?> collection) {
-        System.err.println("This method receives a Collection");
-    }
-
-    public void draw(Iterable<?> iterable) {
-        System.err.println("This method receives a Iterable");
-    }
-    public void draw(Line l) {
-        System.out.println("Draw a line where?");
-    }*/
-
-
     public void draw(Shape s, Brush b) {
-        System.err.println("drawing what where and with what?");
+        System.err.println("draw what where and with what?");
     }
-
 
     public void draw(Line l, Brush b) {
-        System.err.println("drawing a line where and with what?");
+        System.err.println("draw a line where and with what?");
     }
 
     public void draw(Circle c, Brush b) {
         System.err.println("draw a circle where and with what?");
     }
-
-    public void draw(Shape s1, Shape s2, Brush b) {
-        System.err.println("drawing on what two what with what?");
-    }
-
-    public void draw(Shape s1, Circle s2, Brush b) {
-        System.err.println("drawing on what one circle and what with what?");
-    }
-
-    public void operation(Integer i, Integer j) {
-        System.err.println(i + " + " + j);
-    }
-
-    public void operation(int i, int j) {
-        System.err.println(i + j);
-    }
-
-    public void operation(Integer i, int j) {
-        System.err.println("This method will never be executed!");
-    }
-
-    public void sum(int... numbers) {
-        System.err.println(Arrays.stream(numbers).reduce(0, Integer::sum));
-    }
-
-    public void mix(Boolean b, String... arr) {
-        System.err.println("Test mix parameters");
-    }
-
-
 }
 
-/*
 
-
-    public void draw(Shape s, Crayon c) {
-        System.err.println("draw what where and with crayon?");
-    }
-
-
-
-
-
-    public void draw(Shape ...shapes) {
-        System.err.println("draw what shapes where?");
-    }
-
-    public void print(String... text) {
-        System.err.println("Varargs");
-    }
-
-    public void print(String s1, String s2) {
-        System.err.println("Two parameters");
-    }
-
-
-
-}
-*/

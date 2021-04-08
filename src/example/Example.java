@@ -3,10 +3,6 @@ package example;
 import ist.meic.pava.MultipleDispatch.UsingMultipleDispatch;
 import ist.meic.pava.MultipleDispatchExtended.UsingMultipleDispatchExtended;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
-
 public class Example {
     public static void main(String[] args) {
         Device[] devices = new Device[]{new Screen(), /*new Tablet(),*/ new Printer()/*, new Hologram()*/};
@@ -14,29 +10,15 @@ public class Example {
         Brush[] brushes = new Brush[]{new Pencil(), new Crayon()};
 
 
-        UsingMultipleDispatchExtended.invoke(new Device(),"draw",new ArrayList<Integer>(), new HashSet<Boolean>());
-
-
-/*        UsingMultipleDispatchExtended.invoke(d, "draw", new Shape(), new Shape(), new Shape());
-        UsingMultipleDispatchExtended.invoke(s, "draw", new Circle(), new Shape(), new Circle());
-        UsingMultipleDispatchExtended.invoke(s, "draw", new Line(), new Circle(), new Square());
-        UsingMultipleDispatchExtended.invoke(s, "draw", new Circle(), new Circle(), new Circle());
-        UsingMultipleDispatchExtended.invoke(s, "print", "b", "c");
-        UsingMultipleDispatchExtended.invoke(s, "print", "b", "c", "a", "v");
-        UsingMultipleDispatchExtended.invoke(s, "sum", 2, 4);
-        UsingMultipleDispatchExtended.invoke(s, "sum", 2, 4, 5);
-        UsingMultipleDispatchExtended.invoke(s, "mix", true, "a", "b");*/
-
-      //  UsingMultipleDispatchExtended.invoke(new Device(), "draw", sha);
-/*        for (Device ds : devices) {
+        for (Device ds : devices) {
             for (Shape sh : shapes) {
                 for (Brush br : brushes) {
+                    ds.draw(sh, br);
                     UsingMultipleDispatch.invoke(ds, "draw", sh, br);
-                    UsingMultipleDispatchExtended.invoke(ds, "draw", sh, br);
                     UsingMultipleDispatchExtended.invoke(ds, "draw", sh, br);
                 }
             }
-        }*/
+        }
     }
 }
 
