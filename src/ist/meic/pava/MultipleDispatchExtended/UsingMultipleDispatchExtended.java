@@ -36,15 +36,16 @@ public class UsingMultipleDispatchExtended {
         }
     }
 
-
     public static Object invoke(Object receiver, String name, Object... args) {
         args = args == null ? new Object[1] : args;
         Class<?>[] argsTypes;
+
         // First it tries to find and call the most specific method with primitive types
         argsTypes = Arrays.stream(args)
                 .map(arg -> arg == null ? Object.class : arg.getClass())
                 .map(type -> isWrappedType(type) ? WRAPPER_TO_PRIMITIVE.get(type) : type)
                 .toArray(Class[]::new);
+
         try {
             return invokeMethod(receiver, name, argsTypes, args);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {
@@ -52,6 +53,7 @@ public class UsingMultipleDispatchExtended {
             argsTypes = Arrays.stream(args)
                     .map(o -> o == null ? Object.class : o.getClass())
                     .toArray(Class[]::new);
+
             try {
                 return invokeMethod(receiver, name, argsTypes, args);
             } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
@@ -121,7 +123,6 @@ public class UsingMultipleDispatchExtended {
             return getMostSpecificMethod(receiverType, name, argsType);
         }
     }
-
 
     // Filter and sort the methods according the specification project to return the most specific one
     private static Method getMostSpecificMethod(Class<?> receiverType,
@@ -281,5 +282,4 @@ public class UsingMultipleDispatchExtended {
             return 1;
         return 0;
     };
-
 }
