@@ -17,7 +17,6 @@ public class UsingMultipleDispatch {
         private static final String NO_METHOD_AVAILABLE = "\nNo Method found with name [%s]," +
                 "on class [%s], compatible with parameters: %s";
 
-
         public MultipleDispatchException(String receiver, String name, String types, Throwable t) {
             super(String.format(NO_METHOD_AVAILABLE, receiver, name, types), t);
         }
@@ -60,7 +59,7 @@ public class UsingMultipleDispatch {
                                                 Class<?>[] argsType) throws NoSuchMethodException {
         return Arrays.stream(receiverType.getMethods())
                 .filter(method -> method.getName().equals(name))
-                .filter(method -> method.getParameterTypes().length == argsType.length)
+                .filter(method -> method.getParameterCount() == argsType.length)
                 .filter(method -> isMethodApplicable(method, argsType))
                 .min(receiverTypeHierarchyComparator.thenComparing(argsTypeHierarchyComparator))
                 .orElseThrow(NoSuchMethodException::new);
@@ -68,7 +67,7 @@ public class UsingMultipleDispatch {
 
     // Call the method parameters validator according the method is varargs or not
     private static boolean isMethodApplicable(Method method, Class<?>... argsType) {
-        int numberOfArgs = method.getParameterTypes().length;
+        int numberOfArgs = method.getParameterCount();
         Class<?>[] parameterTypes = method.getParameterTypes();
         return IntStream
                 .range(0, numberOfArgs)
@@ -78,7 +77,7 @@ public class UsingMultipleDispatch {
 
     // Compare two methods according the args types hierarchy
     static Comparator<Method> argsTypeHierarchyComparator = (m1, m2) -> {
-        for (int i = 0; i < m1.getParameterTypes().length; i++) {
+        for (int i = 0; i < m1.getParameterCount(); i++) {
             Class<?> c1 = m1.getParameterTypes()[i];
             Class<?> c2 = m2.getParameterTypes()[i];
             boolean c1IsSubType = c2.isAssignableFrom(c1);

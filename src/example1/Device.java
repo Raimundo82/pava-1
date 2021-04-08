@@ -3,16 +3,13 @@ package example1;
 public class Device {
 
 
-    public void draw(Line l,Open o) {
-        System.err.println("draw a line on What?");
+    public void draw(Shape s1, Shape s2, Brush b) {
+        System.err.println("draw two where with what?");
     }
-    public void draw(Circle c,Closed cl) {
-        System.err.println("draw a circle on what?");
+    public void draw(Shape s1, Circle c, Brush b) {
+        System.err.println("draw what and a circle where with what?");
     }
 
-    public void draw(Line l,Closed cl) {
-        System.err.println("draw an open shape on what?");
-    }
 
 
 
