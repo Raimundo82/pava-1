@@ -87,7 +87,7 @@ public class UsingMultipleDispatchExtended {
                                               Object[] args,
                                               Method method) throws IllegalAccessException, InvocationTargetException {
 
-        int methodParams = method.getParameterTypes().length;
+        int methodParams = method.getParameterCount();
         Class<?> arrayComponentType = method.getParameterTypes()[methodParams - 1].getComponentType();
         Object varargsArray = Array.newInstance(arrayComponentType, args.length - methodParams + 1);
 
@@ -129,8 +129,8 @@ public class UsingMultipleDispatchExtended {
                                                 Class<?>[] argsType) throws NoSuchMethodException {
         return Arrays.stream(receiverType.getMethods())
                 .filter(method -> method.getName().equals(name))
-                .filter(method -> method.getParameterTypes().length == argsType.length ||
-                        (method.isVarArgs() && argsType.length >= method.getParameterTypes().length - 1))
+                .filter(method -> method.getParameterCount() == argsType.length ||
+                        (method.isVarArgs() && argsType.length >= method.getParameterCount() - 1))
                 .filter(method -> isMethodApplicable(method, argsType))
                 .min((receiverTypeHierarchyComparator)
                         .thenComparing(parameterTypesHierarchyComparator(false))
@@ -141,17 +141,17 @@ public class UsingMultipleDispatchExtended {
 
     // Call the method parameters validator according the method is varargs or not
     private static boolean isMethodApplicable(Method method, Class<?>... argsType) {
-        int numberOfArgs = method.getParameterTypes().length;
+        int numberOfArgs = method.getParameterCount();
         return method.isVarArgs() ?
-                isVarargsMethodApplicable(method, argsType) :
+                isVarargsMethodApplicable(method, numberOfArgs, argsType) :
                 isNonVarargsMethodApplicable(method, numberOfArgs, argsType);
     }
 
     // Validate varargs method parameters including the possibility of being a method
     // with varargs and non varargs parameters
     private static boolean isVarargsMethodApplicable(Method method,
+                                                     int methodParams,
                                                      Class<?>... argsType) {
-        int methodParams = method.getParameterTypes().length;
         if (methodParams == 1) {
             return isVarargsComponentTypeApplicable(method, argsType.length, argsType);
         } else {
@@ -177,7 +177,7 @@ public class UsingMultipleDispatchExtended {
                                                             int numberOfVarargs,
                                                             Class<?>[] argsType) {
         Class<?> varargsComponentType = method
-                .getParameterTypes()[method.getParameterTypes().length - 1]
+                .getParameterTypes()[method.getParameterCount() - 1]
                 .getComponentType();
 
         return IntStream
@@ -191,14 +191,13 @@ public class UsingMultipleDispatchExtended {
     // method with the most commons abstracts interfaces that are implemented by the arguments.
     private static Comparator<Method> parameterTypesHierarchyComparator(boolean isInInterfaceMode) {
         return ((m1, m2) -> {
-            int m1Params = m1.getParameterTypes().length;
             if (!m1.isVarArgs() && m2.isVarArgs()) {
                 return -1;
             }
             if (m1.isVarArgs() && !m2.isVarArgs()) {
                 return 1;
             }
-            for (int i = 0; i < m1Params; i++) {
+            for (int i = 0; i < m1.getParameterCount(); i++) {
                 Class<?> c1 = m1.getParameterTypes()[i];
                 Class<?> c2 = m2.getParameterTypes()[i];
 
@@ -265,7 +264,7 @@ public class UsingMultipleDispatchExtended {
 
     // Return the nth parameter type according if it is a varargs method or not
     private static boolean isFirstParameterInterface(Method method) {
-        return method.getParameterTypes().length > 0 && method.getParameterTypes()[0].isInterface();
+        return method.getParameterCount() > 0 && method.getParameterTypes()[0].isInterface();
     }
 
     // Compare two methods according their declaring class.
