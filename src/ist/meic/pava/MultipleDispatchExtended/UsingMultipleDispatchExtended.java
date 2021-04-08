@@ -186,41 +186,33 @@ public class UsingMultipleDispatchExtended {
     }
 
     // Parameter method comparator that works bottom up left to right order when !isInInterfaceMode and
-    // in same hierarchy level of all parameters, it gives priority to non varargs methods.
-    // When isInInterfaceMode it works in top down left right order, do find the method with the most commons
-    // abstracts interfaces that are implemented by the arguments. If there is a method varargs with more parameters
-    // t
+    // in same hierarchy level of all parameters, it gives priority to non varargs methods as its
+    // done in java compile time. When isInInterfaceMode it works in top down left right order, do find the
+    // method with the most commons abstracts interfaces that are implemented by the arguments.
     private static Comparator<Method> parameterTypesHierarchyComparator(boolean isInInterfaceMode) {
         return ((m1, m2) -> {
             int m1Params = m1.getParameterTypes().length;
-            int m2Params = m2.getParameterTypes().length;
-            if (m1.isVarArgs() && !m2.isVarArgs() && m1Params > m2Params) {
-                return 1;
-            }
-            if (m2.isVarArgs() && !m1.isVarArgs() && m2Params > m1Params) {
+            if (!m1.isVarArgs() && m2.isVarArgs()) {
                 return -1;
             }
-            for (int i = 0; i < Integer.max(m1Params, m2Params); i++) {
-
-                Class<?> c1 = getParameterType(m1, m1Params, i);
-                Class<?> c2 = getParameterType(m2, m2Params, i);
-
-                boolean c1IsSubType = c2.isAssignableFrom(c1);
-                boolean c2IsSubtype = c1.isAssignableFrom(c2);
-                boolean oneIsInterface = c1.isInterface() || c2.isInterface();
-                boolean oneIsVarargs = m1.isVarArgs() || m2.isVarArgs();
+            if (m1.isVarArgs() && !m2.isVarArgs()) {
+                return 1;
+            }
+            for (int i = 0; i < m1Params; i++) {
+                Class<?> c1 = m1.getParameterTypes()[i];
+                Class<?> c2 = m2.getParameterTypes()[i];
 
                 if (c1.isInterface() && c2.isInterface() && !isInInterfaceMode)
                     return 0;
-                if (c1IsSubType && !c2IsSubtype && !(oneIsInterface && oneIsVarargs))
+
+                boolean c1IsSubType = c2.isAssignableFrom(c1);
+                boolean c2IsSubtype = c1.isAssignableFrom(c2);
+
+                if (c1IsSubType && !c2IsSubtype)
                     return isInInterfaceMode ? 1 : -1;
-                else if (c2IsSubtype && !c1IsSubType && !(oneIsInterface && oneIsVarargs))
+                else if (c2IsSubtype && !c1IsSubType)
                     return isInInterfaceMode ? -1 : 1;
             }
-            if (m1.isVarArgs() && !m2.isVarArgs() && !isInInterfaceMode)
-                return 1;
-            if (!m1.isVarArgs() && m2.isVarArgs() && !isInInterfaceMode)
-                return -1;
             return 0;
         });
     }
@@ -271,24 +263,9 @@ public class UsingMultipleDispatchExtended {
         return 0;
     };
 
-
     // Return the nth parameter type according if it is a varargs method or not
-    private static Class<?> getParameterType(Method method, int paramLength, int index) {
-        Class<?> c1;
-        if (method.isVarArgs()) {
-            c1 = isMethodLastParameter(index, method) ?
-                    method.getParameterTypes()[paramLength - 1].getComponentType() :
-                    method.getParameterTypes()[index];
-        } else {
-            c1 = method.getParameterTypes()[index];
-        }
-        return c1;
-    }
-
-    // Used in varargs methods when they are being compared with non varargs methods and
-    // it is needed to extend the varargs component type through the iterations
-    private static boolean isMethodLastParameter(int n, Method method) {
-        return n >= method.getParameterTypes().length - 1;
+    private static boolean isFirstParameterInterface(Method method) {
+        return method.getParameterTypes().length > 0 && method.getParameterTypes()[0].isInterface();
     }
 
     // Compare two methods according their declaring class.
@@ -297,8 +274,7 @@ public class UsingMultipleDispatchExtended {
         Class<?> c2 = m2.getDeclaringClass();
         boolean c1IsSubType = c2.isAssignableFrom(c1);
         boolean c2IsSubtype = c1.isAssignableFrom(c2);
-        if (getParameterType(m1, 1, 0).isInterface() &&
-                getParameterType(m2, 1, 0).isInterface())
+        if (isFirstParameterInterface(m1) && isFirstParameterInterface(m2))
             return 0;
         if (c1IsSubType && !c2IsSubtype)
             return -1;

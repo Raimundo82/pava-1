@@ -6,6 +6,6 @@ import ist.meic.pava.MultipleDispatchExtended.UsingMultipleDispatchExtended;
 public class Main {
     public static void main(String[] args) {
 
-        UsingMultipleDispatch.invoke(new DataProcess(), "asd", new DataStructure());
+        UsingMultipleDispatchExtended.invoke(new DataProcess(), "process", new DataStructure());
     }
 }
