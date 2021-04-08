@@ -129,7 +129,8 @@ public class UsingMultipleDispatchExtended {
                                                 Class<?>[] argsType) throws NoSuchMethodException {
         return Arrays.stream(receiverType.getMethods())
                 .filter(method -> method.getName().equals(name))
-                .filter(method -> method.getParameterTypes().length == argsType.length || method.isVarArgs())
+                .filter(method -> method.getParameterTypes().length == argsType.length ||
+                        (method.isVarArgs() && argsType.length >= method.getParameterTypes().length - 1))
                 .filter(method -> isMethodApplicable(method, argsType))
                 .min((receiverTypeHierarchyComparator)
                         .thenComparing(parameterTypesHierarchyComparator(false))
@@ -187,11 +188,18 @@ public class UsingMultipleDispatchExtended {
     // Parameter method comparator that works bottom up left to right order when !isInInterfaceMode and
     // in same hierarchy level of all parameters, it gives priority to non varargs methods.
     // When isInInterfaceMode it works in top down left right order, do find the method with the most commons
-    // abstracts interfaces that are implemented by the arguments.
+    // abstracts interfaces that are implemented by the arguments. If there is a method varargs with more parameters
+    // t
     private static Comparator<Method> parameterTypesHierarchyComparator(boolean isInInterfaceMode) {
         return ((m1, m2) -> {
             int m1Params = m1.getParameterTypes().length;
             int m2Params = m2.getParameterTypes().length;
+            if (m1.isVarArgs() && !m2.isVarArgs() && m1Params > m2Params) {
+                return 1;
+            }
+            if (m2.isVarArgs() && !m1.isVarArgs() && m2Params > m1Params) {
+                return -1;
+            }
             for (int i = 0; i < Integer.max(m1Params, m2Params); i++) {
 
                 Class<?> c1 = getParameterType(m1, m1Params, i);

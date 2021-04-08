@@ -25,4 +25,14 @@ public class Device {
         Arrays.stream(text).forEach(t -> System.out.println(t));
     }
 
+
+    public void test2(String a, String b, String ...text) {
+        System.out.println("varargs");
+    }
+
+    public void test2(Object a, Object b) {
+        System.out.println("non varargs");
+    }
+
+
 }

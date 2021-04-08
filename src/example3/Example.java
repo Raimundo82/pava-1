@@ -25,6 +25,9 @@ public class Example {
         new Device().test(new ArrayList<Boolean>(), new HashSet<Integer>(), "1", "2", "3");
         UsingMultipleDispatchExtended.invoke(new Device(), "test", new ArrayList<>(), new HashSet<>(), "1", "2", "3");
 
+        new Device().test2("1","","");
+        UsingMultipleDispatchExtended.invoke(new Device(), "test2","","","");
+
     }
 
 }
