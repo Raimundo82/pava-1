@@ -71,8 +71,8 @@ public class UsingMultipleDispatch {
         Class<?>[] parameterTypes = method.getParameterTypes();
         return IntStream
                 .range(0, numberOfArgs)
-                .allMatch(i -> parameterTypes[i].isAssignableFrom(argsType[i])
-                        && !parameterTypes[i].isInterface());
+                .allMatch(i -> parameterTypes[i].isAssignableFrom(argsType[i]));
+                        //&& !parameterTypes[i].isInterface());
     }
 
     // Compare two methods according the args types hierarchy

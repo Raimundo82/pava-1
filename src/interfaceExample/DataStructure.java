@@ -5,6 +5,7 @@ import java.util.function.UnaryOperator;
 
 
 public class DataStructure implements Set, List {
+
     @Override
     public boolean addAll(int i, Collection collection) {
         return false;
@@ -12,12 +13,12 @@ public class DataStructure implements Set, List {
 
     @Override
     public void replaceAll(UnaryOperator unaryOperator) {
-
+        List.super.replaceAll(unaryOperator);
     }
 
     @Override
     public void sort(Comparator comparator) {
-
+        List.super.sort(comparator);
     }
 
     @Override
@@ -112,7 +113,7 @@ public class DataStructure implements Set, List {
 
     @Override
     public Spliterator spliterator() {
-        return null;
+        return Set.super.spliterator();
     }
 
     @Override

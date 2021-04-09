@@ -1,5 +1,6 @@
 package example3;
 
+import ist.meic.pava.MultipleDispatch.UsingMultipleDispatch;
 import ist.meic.pava.MultipleDispatchExtended.UsingMultipleDispatchExtended;
 
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ public class Example {
         System.out.println("example4");
         new Device().test(new ArrayList<Boolean>(), new HashSet<Integer>(), "1", "2", "3");
         UsingMultipleDispatchExtended.invoke(new Device(), "test", new ArrayList<>(), new HashSet<>(), "1", "2", "3");
+
 
         new Device().test2("1","","");
         UsingMultipleDispatchExtended.invoke(new Device(), "test2","","","");

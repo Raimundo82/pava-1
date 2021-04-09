@@ -263,23 +263,17 @@ public class UsingMultipleDispatchExtended {
         return 0;
     };
 
-    // Return the nth parameter type according if it is a varargs method or not
-    private static boolean isFirstParameterInterface(Method method) {
-        return method.getParameterCount() > 0 && method.getParameterTypes()[0].isInterface();
-    }
-
     // Compare two methods according their declaring class.
     private static final Comparator<Method> receiverTypeHierarchyComparator = (m1, m2) -> {
         Class<?> c1 = m1.getDeclaringClass();
         Class<?> c2 = m2.getDeclaringClass();
         boolean c1IsSubType = c2.isAssignableFrom(c1);
         boolean c2IsSubtype = c1.isAssignableFrom(c2);
-        if (isFirstParameterInterface(m1) && isFirstParameterInterface(m2))
-            return 0;
         if (c1IsSubType && !c2IsSubtype)
             return -1;
         if (c2IsSubtype && !c1IsSubType)
             return 1;
         return 0;
     };
+
 }
