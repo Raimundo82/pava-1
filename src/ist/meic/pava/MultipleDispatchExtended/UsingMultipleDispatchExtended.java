@@ -36,6 +36,7 @@ public class UsingMultipleDispatchExtended {
         }
     }
 
+    // Map arguments values to its types in order to find an applicable and most specific method
     public static Object invoke(Object receiver, String name, Object... args) {
         args = args == null ? new Object[1] : args;
         Class<?>[] argsTypes;
@@ -70,7 +71,7 @@ public class UsingMultipleDispatchExtended {
         return WRAPPER_TO_PRIMITIVE.containsKey(type);
     }
 
-    // Invoke a non varargs method or call specific method do deal with varargs method
+    // Invoke a non varargs method or call the specific method do deal with varargs method
     private static Object invokeMethod(Object receiver,
                                        String name,
                                        Class<?>[] argsTypes,
@@ -84,7 +85,7 @@ public class UsingMultipleDispatchExtended {
         return method.invoke(receiver, args);
     }
 
-    // Build and fill the type array needed to invoke a varargs method
+    // Build and fill the array(s) needed to invoke a varargs method
     private static Object varargsMethodInvoke(Object receiver,
                                               Object[] args,
                                               Method method) throws IllegalAccessException, InvocationTargetException {
@@ -111,7 +112,8 @@ public class UsingMultipleDispatchExtended {
         }
     }
 
-    // Get a method from receiver type or its superclasses types, whom parameters types match exactly the args types
+    // Get a method from receiver type or from its superclasses types, whom parameters types match exactly the
+    // arguments types
     private static Method bestMethod(Class<?> receiverType,
                                      String name,
                                      Class<?>... argsType) throws NoSuchMethodException {
@@ -124,7 +126,7 @@ public class UsingMultipleDispatchExtended {
         }
     }
 
-    // Filter and sort the methods according the specification project to return the most specific one
+    // Filter and sort the methods according the project specification and return the most specific one
     private static Method getMostSpecificMethod(Class<?> receiverType,
                                                 String name,
                                                 Class<?>[] argsType) throws NoSuchMethodException {
@@ -140,7 +142,7 @@ public class UsingMultipleDispatchExtended {
                 .orElseThrow(NoSuchMethodException::new);
     }
 
-    // Call the method parameters validator according the method is varargs or not
+    // Call the method parameters validator according if it is or not varargs
     private static boolean isMethodApplicable(Method method, Class<?>... argsType) {
         int numberOfArgs = method.getParameterCount();
         return method.isVarArgs() ?
@@ -186,10 +188,10 @@ public class UsingMultipleDispatchExtended {
                 .allMatch(i -> varargsComponentType.isAssignableFrom(argsType[i]));
     }
 
-    // Parameter method comparator that works bottom up left to right order when !isInInterfaceMode and
-    // in same hierarchy level of all parameters, it gives priority to non varargs methods as its
-    // done in java compile time. When isInInterfaceMode it works in top down left right order, do find the
-    // method with the most commons abstracts interfaces that are implemented by the arguments.
+    // Parameter method comparator that works bottom up left to right order when !isInInterfaceMode and,
+    // in same hierarchy level of all parameters, gives priority to non varargs methods, like is done
+    // in java compile time. When isInInterfaceMode ,it works in top down left right order, to find the
+    // method with the most higher hierarchy interface that are implemented by the arguments.
     private static Comparator<Method> parameterTypesHierarchyComparator(boolean isInInterfaceMode) {
         return ((m1, m2) -> {
             if (!m1.isVarArgs() && m2.isVarArgs()) {

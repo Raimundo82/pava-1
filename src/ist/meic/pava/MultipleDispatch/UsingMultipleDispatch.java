@@ -22,7 +22,7 @@ public class UsingMultipleDispatch {
         }
     }
 
-
+    // Map arguments values to its types in order to find an applicable and most specific method
     public static Object invoke(Object receiver, String name, Object... args) {
 
         args = args == null ? new Object[1] : args;
@@ -42,7 +42,8 @@ public class UsingMultipleDispatch {
         }
     }
 
-    // Get a method from receiver type or its superclasses types, whom parameters types match exactly the args types
+    // Get a method from receiver type or from its superclasses types, whom parameters types match exactly the
+    // arguments types
     private static Method bestMethod(Class<?> receiverType,
                                      String name,
                                      Class<?>... argsType) throws NoSuchMethodException {
@@ -53,7 +54,7 @@ public class UsingMultipleDispatch {
         }
     }
 
-    // Filter and sort the methods according the specification project to return the most specific one
+    // Filter and sort the methods according the project specification and return the most specific one
     private static Method getMostSpecificMethod(Class<?> receiverType,
                                                 String name,
                                                 Class<?>[] argsType) throws NoSuchMethodException {
@@ -65,17 +66,17 @@ public class UsingMultipleDispatch {
                 .orElseThrow(NoSuchMethodException::new);
     }
 
-    // Call the method parameters validator according the method is varargs or not
+    // Call the method parameters validator
     private static boolean isMethodApplicable(Method method, Class<?>... argsType) {
         int numberOfArgs = method.getParameterCount();
         Class<?>[] parameterTypes = method.getParameterTypes();
         return IntStream
                 .range(0, numberOfArgs)
-                .allMatch(i -> parameterTypes[i].isAssignableFrom(argsType[i]));
-                        //&& !parameterTypes[i].isInterface());
+                .allMatch(i -> parameterTypes[i].isAssignableFrom(argsType[i])
+                        && !parameterTypes[i].isInterface());
     }
 
-    // Compare two methods according the args types hierarchy
+    // Compare two methods according the arguments types hierarchy
     static Comparator<Method> argsTypeHierarchyComparator = (m1, m2) -> {
         for (int i = 0; i < m1.getParameterCount(); i++) {
             Class<?> c1 = m1.getParameterTypes()[i];
