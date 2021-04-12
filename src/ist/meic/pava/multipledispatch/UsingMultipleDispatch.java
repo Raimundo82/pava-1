@@ -1,4 +1,4 @@
-package ist.meic.pava.MultipleDispatch;
+package ist.meic.pava.multipledispatch;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -23,7 +23,7 @@ public class UsingMultipleDispatch {
     }
 
     // Map arguments values to its types in order to find an applicable and most specific method
-    public static Object invoke(Object receiver, String name, Object... args) {
+    public static void invoke(Object receiver, String name, Object... args) {
 
         args = args == null ? new Object[1] : args;
         Class<?>[] argsTypes = Arrays.stream(args)
@@ -32,7 +32,7 @@ public class UsingMultipleDispatch {
 
         try {
             Method method = bestMethod(receiver.getClass(), name, argsTypes);
-            return method.invoke(receiver, args);
+            method.invoke(receiver, args);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
             throw new MultipleDispatchException(
                     name,

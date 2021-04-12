@@ -1,8 +1,8 @@
 package example1;
 
 
-import ist.meic.pava.MultipleDispatch.UsingMultipleDispatch;
-import ist.meic.pava.MultipleDispatchExtended.UsingMultipleDispatchExtended;
+import ist.meic.pava.multipledispatch.UsingMultipleDispatch;
+import ist.meic.pava.multipledispatchextended.UsingMultipleDispatchExtended;
 
 public class Example {
     public static void main(String[] args) {

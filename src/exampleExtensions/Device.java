@@ -15,7 +15,12 @@ public class Device {
         System.err.println(Arrays.stream(numbers).reduce(0, Integer::sum));
     }
 
-    public void mix(boolean b, String ...arr) {
+    public void mix(Boolean b, String ...arr) {
         System.err.println("Test mix parameter!");
     }
+
+    public void mix(Boolean b, Object arr) {
+        System.err.println("non varargs!");
+    }
+
 }

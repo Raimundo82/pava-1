@@ -1,7 +1,6 @@
 package example3;
 
-import ist.meic.pava.MultipleDispatch.UsingMultipleDispatch;
-import ist.meic.pava.MultipleDispatchExtended.UsingMultipleDispatchExtended;
+import ist.meic.pava.multipledispatchextended.UsingMultipleDispatchExtended;
 
 import java.util.ArrayList;
 import java.util.HashSet;
