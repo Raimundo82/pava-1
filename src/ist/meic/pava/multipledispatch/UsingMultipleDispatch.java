@@ -62,7 +62,7 @@ public class UsingMultipleDispatch {
                 .filter(method -> method.getName().equals(name))
                 .filter(method -> method.getParameterCount() == argsType.length)
                 .filter(method -> isMethodApplicable(method, argsType))
-                .min(receiverTypeHierarchyComparator.thenComparing(argsTypeHierarchyComparator))
+                .min(receiverTypeHierarchyComparator.thenComparing(parameterTypesHierarchyComparator))
                 .orElseThrow(NoSuchMethodException::new);
     }
 
@@ -77,7 +77,7 @@ public class UsingMultipleDispatch {
     }
 
     // Compare two methods according the arguments types hierarchy
-    static Comparator<Method> argsTypeHierarchyComparator = (m1, m2) -> {
+    static Comparator<Method> parameterTypesHierarchyComparator = (m1, m2) -> {
         for (int i = 0; i < m1.getParameterCount(); i++) {
             Class<?> c1 = m1.getParameterTypes()[i];
             Class<?> c2 = m2.getParameterTypes()[i];
