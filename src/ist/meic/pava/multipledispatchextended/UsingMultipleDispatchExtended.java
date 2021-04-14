@@ -207,8 +207,14 @@ public class UsingMultipleDispatchExtended {
                 Class<?> c1 = m1.getParameterTypes()[i];
                 Class<?> c2 = m2.getParameterTypes()[i];
 
-                if (c1.isInterface() && c2.isInterface() && !isInInterfaceMode)
-                    return 0;
+                if (!isInInterfaceMode) {
+                    if (c1.isInterface() && c2.isInterface())
+                        return 0;
+                    if (!c1.isInterface() && c2.isInterface())
+                        return -1;
+                    if (c1.isInterface())
+                        return 1;
+                }
 
                 boolean c1IsSubType = c2.isAssignableFrom(c1);
                 boolean c2IsSubtype = c1.isAssignableFrom(c2);
