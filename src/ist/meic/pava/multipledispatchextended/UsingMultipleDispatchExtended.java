@@ -39,7 +39,7 @@ public class UsingMultipleDispatchExtended {
     }
 
     // Map arguments values to its types in order to find an applicable and most specific method
-    public static void invoke(Object receiver, String name, Object... args) {
+    public static Object invoke(Object receiver, String name, Object... args) {
         args = args == null ? new Object[1] : args;
         Class<?>[] argsTypes;
 
@@ -50,7 +50,7 @@ public class UsingMultipleDispatchExtended {
                 .toArray(Class[]::new);
 
         try {
-            invokeMethod(receiver, name, argsTypes, args);
+            return invokeMethod(receiver, name, argsTypes, args);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {
             // Then, if a exception is caught, it retries it with no primitive types
             argsTypes = Arrays.stream(args)
@@ -58,7 +58,7 @@ public class UsingMultipleDispatchExtended {
                     .toArray(Class[]::new);
 
             try {
-                invokeMethod(receiver, name, argsTypes, args);
+                return invokeMethod(receiver, name, argsTypes, args);
             } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
                 throw new MultipleDispatchExtendedException(
                         name,
@@ -74,24 +74,24 @@ public class UsingMultipleDispatchExtended {
     }
 
     // Invoke a non varargs method or call the specific method do deal with varargs method
-    private static void invokeMethod(Object receiver,
-                                     String name,
-                                     Class<?>[] argsTypes,
-                                     Object[] args
+    private static Object invokeMethod(Object receiver,
+                                       String name,
+                                       Class<?>[] argsTypes,
+                                       Object[] args
     ) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         Method method = bestMethod(receiver.getClass(), name, argsTypes);
 
         if (method.isVarArgs()) {
-            varargsMethodInvoke(receiver, args, method);
-            return;
+            return varargsMethodInvoke(receiver, args, method);
+
         }
-        method.invoke(receiver, args);
+        return method.invoke(receiver, args);
     }
 
     // Build and fill the array(s) needed to invoke a varargs method
-    private static void varargsMethodInvoke(Object receiver,
-                                            Object[] args,
-                                            Method method) throws IllegalAccessException, InvocationTargetException {
+    private static Object varargsMethodInvoke(Object receiver,
+                                              Object[] args,
+                                              Method method) throws IllegalAccessException, InvocationTargetException {
 
         int methodParams = method.getParameterCount();
         Class<?> arrayComponentType = method.getParameterTypes()[methodParams - 1].getComponentType();
@@ -101,7 +101,7 @@ public class UsingMultipleDispatchExtended {
             IntStream
                     .range(0, args.length)
                     .forEach(i -> Array.set(varargsArray, i, args[i]));
-            method.invoke(receiver, varargsArray);
+            return method.invoke(receiver, varargsArray);
         } else {
             IntStream
                     .range(0, args.length - methodParams + 1)
@@ -111,7 +111,7 @@ public class UsingMultipleDispatchExtended {
                     .range(0, methodParams - 1)
                     .forEach(i -> Array.set(newArgs, i, args[i]));
             Array.set(newArgs, methodParams - 1, varargsArray);
-            method.invoke(receiver, newArgs);
+            return method.invoke(receiver, newArgs);
         }
     }
 

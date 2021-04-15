@@ -9,10 +9,9 @@ public class Example {
 
         Shape s = new Circle();
 
-        new Screen().draw(s, s, new Pencil());
-        UsingMultipleDispatchExtended.invoke(new Screen(),"draw",s,s,new Pencil());
-        UsingMultipleDispatch.invoke(new Screen(),"draw",s,s,new Pencil());
-
+        new Screen().draw( s, s, new Pencil());
+        UsingMultipleDispatchExtended.invoke(new Screen(), "draw", s, s, new Pencil());
+        UsingMultipleDispatch.invoke(new Screen(), "draw",  s, s, new Pencil());
 
 
     }

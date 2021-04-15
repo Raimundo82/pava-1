@@ -76,6 +76,7 @@ public class UsingMultipleDispatch {
                         && !parameterTypes[i].isInterface());
     }
 
+
     // Compare two methods according the arguments types hierarchy
     static Comparator<Method> argsTypeHierarchyComparator = (m1, m2) -> {
         for (int i = 0; i < m1.getParameterCount(); i++) {
