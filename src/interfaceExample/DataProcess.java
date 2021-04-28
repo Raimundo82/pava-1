@@ -14,6 +14,11 @@ public class DataProcess  {
         System.err.println("Processing a data list");
     }
 
+    public void process(Collection list) {
+        System.err.println("Processing a data list");
+    }
+
+
 
 
 
